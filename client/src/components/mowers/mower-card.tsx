@@ -50,7 +50,7 @@ export default function MowerCard({ mower }: MowerCardProps) {
               <div>
                 <h3 className="font-medium">{mower.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Serial: {mower.serialNumber}
+                  Serial: {String(mower.serialNumber || "")}
                 </p>
               </div>
             </div>
