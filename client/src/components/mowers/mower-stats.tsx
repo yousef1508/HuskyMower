@@ -42,11 +42,12 @@ export default function MowerStats() {
       m.status === 'ERROR' || m.status === 'STOPPED_IN_GARDEN'
     ).length;
     
-    // Example changes (in a production app, this would come from comparing with historical data)
-    const totalChange = 1; // Added one new mower since last month
-    const activeChange = 2; // Two more mowers active than yesterday
-    const chargingChange = 1; // One more charging than yesterday
-    const offlineChange = 1; // One more offline than yesterday
+    // Since we don't have historical data for comparison, we'll show 0 for changes
+    // This is more accurate than showing arbitrary numbers
+    const totalChange = 0;
+    const activeChange = 0;
+    const chargingChange = 0;
+    const offlineChange = 0;
     
     return {
       total,
