@@ -161,7 +161,7 @@ const GeofencingMap: React.FC<GeofencingMapProps> = ({
             >
               <Popup>
                 <div className="p-2">
-                  <h3 className="font-bold">{mower.model} {mower.serialNumber.slice(-4)}</h3>
+                  <h3 className="font-bold">{mower.model} {typeof mower.serialNumber === 'string' ? mower.serialNumber.slice(-4) : ''}</h3>
                   <p className="text-sm">Status: {mower.status}</p>
                   <p className="text-sm">Battery: {mower.batteryLevel}%</p>
                   <p className="text-xs mt-1">
