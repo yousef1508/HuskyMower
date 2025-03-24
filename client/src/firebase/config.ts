@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 
 // Get the Firebase app - if it doesn't exist yet, create it
 // This ensures we don't try to create multiple instances
@@ -13,15 +13,14 @@ const firebaseConfig = {
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
-// Sign in with Google
-export const signInWithGoogle = async (): Promise<User> => {
+// Sign in with email/password
+export const signInWithEmail = async (email: string, password: string): Promise<User> => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithEmailAndPassword(auth, email, password);
     return result.user;
   } catch (error) {
-    console.error("Error signing in with Google:", error);
+    console.error("Error signing in with email/password:", error);
     throw error;
   }
 };
