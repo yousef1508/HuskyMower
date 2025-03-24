@@ -56,7 +56,8 @@ export default function Dashboard() {
         {/* Weather forecast and maintenance notes */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <WeatherForecast />
+            {/* Use the weather hook to provide data to the component */}
+            <WeatherForecastWithData />
           </div>
           <div>
             <MaintenanceNotes />
