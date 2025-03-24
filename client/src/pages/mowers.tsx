@@ -1,50 +1,64 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import AppLayout from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader } from "@/components/ui/card";
 import MowerList from "@/components/mowers/mower-list";
-import { Search, Plus } from "lucide-react";
-import { Mower } from "@shared/schema";
+import { Search, RefreshCw, Plus } from "lucide-react";
+import { Mower, AutomowerStatus } from "@shared/schema";
+import { useAutomowers } from "@/hooks/use-automower";
+import { useToast } from "@/hooks/use-toast";
+
+// Helper function to convert AutomowerStatus to Mower format
+const automowerToMower = (automower: AutomowerStatus): Mower => {
+  return {
+    id: parseInt(automower.id) || Math.floor(Math.random() * 10000),
+    userId: 0, // Not used in display
+    name: automower.model || "Automower",
+    model: automower.model || "",
+    serialNumber: automower.serialNumber || "",
+    type: "automower",
+    status: automower.status,
+    batteryLevel: automower.batteryLevel,
+    lastActivity: automower.lastActivity,
+    connectionStatus: automower.connectionStatus,
+    automowerId: automower.id,
+    // Convert string dates to Date objects
+    purchaseDate: new Date(),
+    warrantyExpiration: new Date(),
+    createdAt: new Date(),
+    // Fields not used but needed for type compatibility
+    installationDate: null,
+    coverageArea: null,
+    latitude: null,
+    longitude: null
+  };
+};
 
 export default function Mowers() {
-  const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
-  // Fetch all mowers
-  const { data: allMowers, isLoading: allLoading } = useQuery({
-    queryKey: ["/api/mowers"],
-    staleTime: 30000,
-  });
-  
-  // Fetch automowers
-  const { data: automowers, isLoading: autoLoading } = useQuery({
-    queryKey: ["/api/mowers/type/automower"],
-    staleTime: 30000,
-    enabled: activeTab === "automower",
-  });
-  
-  // Fetch standard mowers
-  const { data: standardMowers, isLoading: standardLoading } = useQuery({
-    queryKey: ["/api/mowers/type/standard"],
-    staleTime: 30000,
-    enabled: activeTab === "standard",
-  });
+  // Fetch automowers from Husqvarna API
+  const { 
+    data: automowerData, 
+    isLoading: automowerLoading,
+    refetch: refetchAutomowers,
+    isError: automowerError
+  } = useAutomowers();
 
-  const getDisplayData = () => {
-    switch (activeTab) {
-      case "automower":
-        return { data: automowers, isLoading: autoLoading };
-      case "standard":
-        return { data: standardMowers, isLoading: standardLoading };
-      default:
-        return { data: allMowers, isLoading: allLoading };
-    }
+  // Convert AutomowerStatus array to Mower array
+  const mowers = automowerData ? automowerData.map(automowerToMower) : [];
+  const isLoading = automowerLoading;
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    toast({
+      title: "Refreshing Automowers",
+      description: "Fetching the latest data from Husqvarna..."
+    });
+    await refetchAutomowers();
   };
-
-  const { data: mowers, isLoading } = getDisplayData();
 
   // Filter mowers by search query
   const filteredMowers = mowers && searchQuery
@@ -78,27 +92,35 @@ export default function Mowers() {
           </div>
         </div>
 
-        {/* Mower tabs and listing */}
+        {/* Mower listing */}
         <Card className="border border-border bg-card">
-          <CardHeader className="p-0">
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-border">
-                <TabsTrigger value="all">All Mowers</TabsTrigger>
-                <TabsTrigger value="automower">Automowers</TabsTrigger>
-                <TabsTrigger value="standard">Standard Mowers</TabsTrigger>
-              </TabsList>
-              <TabsContent value={activeTab} className="p-4">
-                <MowerList
-                  mowers={filteredMowers || []}
-                  isLoading={isLoading}
-                />
-              </TabsContent>
-            </Tabs>
+          <CardHeader className="p-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium">Husqvarna Automowers</h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isLoading}
+              >
+                <RefreshCw className="h-4 w-4 mr-1.5" /> Refresh
+              </Button>
+            </div>
           </CardHeader>
+          <div className="p-4 pt-0">
+            <MowerList
+              mowers={filteredMowers || []}
+              isLoading={isLoading}
+            />
+            {automowerError && (
+              <div className="bg-destructive/10 text-destructive p-4 rounded-md mt-4">
+                <h4 className="font-medium">Error connecting to Husqvarna API</h4>
+                <p className="text-sm mt-1">
+                  Unable to fetch your Automowers. Please check your connection and try again.
+                </p>
+              </div>
+            )}
+          </div>
         </Card>
 
         {/* Mower management guidance */}
@@ -139,8 +161,13 @@ export default function Mowers() {
                     {new Date().toLocaleTimeString()}
                   </span>
                 </div>
-                <Button variant="outline" className="w-full mt-2">
-                  Refresh Connection
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-2"
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1.5" /> Refresh Connection
                 </Button>
               </div>
             </div>
