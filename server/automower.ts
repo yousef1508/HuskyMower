@@ -34,6 +34,11 @@ class AutomowerAPI {
         throw new Error("Missing API_KEY or CLIENT_SECRET. Please check environment variables.");
       }
       
+      console.log("Automower API credentials:", { 
+        apiKey: API_KEY,
+        clientSecretLength: CLIENT_SECRET ? CLIENT_SECRET.length : 0 
+      });
+      
       // According to the Husqvarna API documentation, we only need the content-type header for token request
       const headers: Record<string, string> = {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -56,10 +61,12 @@ class AutomowerAPI {
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`Failed to get token: ${response.status} ${errorText}`);
         throw new Error(`Failed to get token: ${response.status} ${errorText}`);
       }
       
       const data: AuthToken = await response.json();
+      console.log("Successfully obtained Automower token");
       
       this.token = data.access_token;
       // Set token expiry to 80% of the actual expiry time to be safe
@@ -93,6 +100,13 @@ class AutomowerAPI {
         "X-Api-Key": API_KEY
       };
       
+      console.log("Attempting to fetch mowers from Automower API");
+      console.log("Headers:", {
+        AuthorizationLength: token.length,
+        "Authorization-Provider": "husqvarna",
+        "X-Api-Key": API_KEY
+      });
+      
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers`, {
         headers
       });
@@ -104,17 +118,36 @@ class AutomowerAPI {
       }
       
       const data = await response.json();
-      return data.data.map((mower: any) => ({
-        id: mower.id,
-        status: mower.attributes.mower.state,
-        batteryLevel: mower.attributes.battery.batteryPercent,
-        lastActivity: mower.attributes.metadata.lastStatusTimestamp,
-        modeOfOperation: mower.attributes.mower.mode,
-        manufacturer: mower.attributes.system.manufacturer,
-        model: mower.attributes.system.model,
-        serialNumber: mower.attributes.system.serialNumber,
-        connectionStatus: mower.attributes.metadata.connected ? "connected" : "disconnected",
-      }));
+      console.log("Successfully fetched mowers data:", JSON.stringify(data, null, 2));
+      
+      if (!data.data || !Array.isArray(data.data)) {
+        console.error("Unexpected response format from Automower API - no data array", data);
+        return [];
+      }
+      
+      if (data.data.length === 0) {
+        console.log("No mowers found in Automower API response");
+        return [];
+      }
+      
+      return data.data.map((mower: any) => {
+        try {
+          return {
+            id: mower.id,
+            status: mower.attributes.mower.state,
+            batteryLevel: mower.attributes.battery.batteryPercent,
+            lastActivity: mower.attributes.metadata.lastStatusTimestamp,
+            modeOfOperation: mower.attributes.mower.mode,
+            manufacturer: mower.attributes.system.manufacturer,
+            model: mower.attributes.system.model,
+            serialNumber: mower.attributes.system.serialNumber,
+            connectionStatus: mower.attributes.metadata.connected ? "connected" : "disconnected",
+          };
+        } catch (err) {
+          console.error("Error mapping mower data:", err, mower);
+          return null;
+        }
+      }).filter(Boolean) as AutomowerStatus[];
     } catch (error) {
       console.error("Error fetching mowers:", error);
       return [];
