@@ -1,6 +1,6 @@
 import AppLayout from "@/components/layout/app-layout";
 import MowerStats from "@/components/mowers/mower-stats";
-import MowerTabs from "@/components/mowers/mower-tabs";
+import MowerList from "@/components/mowers/mower-list";
 import WeatherForecast from "@/components/weather/weather-forecast";
 import MaintenanceNotes from "@/components/maintenance/maintenance-notes";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,9 @@ import { Search, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useWeatherForecast } from "@/hooks/use-weather";
+import { useAutomowers } from "@/hooks/use-automower";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { AutomowerStatus, Mower } from "@shared/schema";
 
 // Component to fetch weather data and pass it to the WeatherForecast component
 function WeatherForecastWithData() {
@@ -16,20 +19,52 @@ function WeatherForecastWithData() {
   return <WeatherForecast forecast={forecast} isLoading={isLoading} />;
 }
 
+// Helper function to convert AutomowerStatus to Mower type
+const automowerToMower = (automower: AutomowerStatus): Mower => {
+  return {
+    id: parseInt(automower.id) || Math.floor(Math.random() * 1000), // Fallback to random ID if can't parse
+    name: automower.model || "Automower",
+    type: "automower",
+    model: automower.model || "",
+    serialNumber: automower.serialNumber || "",
+    status: automower.status || "unknown",
+    batteryLevel: automower.batteryLevel || 0,
+    lastActivity: automower.lastActivity || new Date().toISOString(),
+    connectionStatus: automower.connectionStatus || "disconnected",
+    automowerId: automower.id,
+    userId: 1, // Default userId
+    manufactureDate: new Date().toISOString(),
+    purchaseDate: new Date().toISOString(),
+    maintenanceInterval: 30,
+    lastMaintenanceDate: new Date().toISOString(),
+    modeOfOperation: automower.modeOfOperation || "auto",
+    latitude: automower.latitude,
+    longitude: automower.longitude,
+  };
+};
+
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Fetch all mowers for the dashboard
+  // Fetch all mowers for the dashboard (from database)
   const { data: mowers, isLoading: mowersLoading } = useQuery({
     queryKey: ["/api/mowers"],
     staleTime: 30000,
   });
+  
+  // Fetch real-time automower data from the Husqvarna API
+  const { data: automowers, isLoading: automowersLoading } = useAutomowers();
   
   // Get recent maintenance notes
   const { data: recentNotes, isLoading: notesLoading } = useQuery({
     queryKey: ["/api/notes/recent"],
     staleTime: 30000,
   });
+  
+  // Convert automowers to the mower format for display
+  const automowersAsMowers = automowers?.map(automowerToMower) || [];
+  const allMowers = [...(automowersAsMowers || [])];
+  const isLoading = mowersLoading || automowersLoading;
 
   return (
     <AppLayout title="Dashboard">
@@ -57,8 +92,18 @@ export default function Dashboard() {
         {/* Mower stats */}
         <MowerStats />
 
-        {/* Mower list */}
-        <MowerTabs />
+        {/* Mower list - using real-time automower data */}
+        <Card className="border border-border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle>Your Automowers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MowerList
+              mowers={automowersAsMowers}
+              isLoading={automowersLoading}
+            />
+          </CardContent>
+        </Card>
 
         {/* Weather forecast and maintenance notes */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
