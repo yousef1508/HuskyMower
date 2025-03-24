@@ -134,7 +134,7 @@ export default function WeatherForecastComponent({
                       <div className="flex justify-between items-center text-sm mt-1">
                         <span className="text-muted-foreground">Mowing:</span>
                         <span className="flex items-center">
-                          <span className="h-2.5 w-2.5 rounded-full bg-${mowingCondition.color}-500 mr-1.5"></span>
+                          <span className={`h-2.5 w-2.5 rounded-full bg-${mowingCondition.color}-500 mr-1.5`}></span>
                           {mowingCondition.text}
                         </span>
                       </div>

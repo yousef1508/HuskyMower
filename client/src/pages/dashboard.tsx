@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useWeatherForecast } from "@/hooks/use-weather";
+
+// Component to fetch weather data and pass it to the WeatherForecast component
+function WeatherForecastWithData() {
+  const { data: forecast, isLoading } = useWeatherForecast();
+  return <WeatherForecast forecast={forecast} isLoading={isLoading} />;
+}
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
