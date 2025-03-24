@@ -90,7 +90,7 @@ const GeofencingMap: React.FC<GeofencingMapProps> = ({
         center={center} 
         zoom={zoom} 
         style={{ height: '100%', width: '100%' }}
-        whenReady={(mapEvent: L.Map) => setMapInstance(mapEvent.target)}
+        ref={setMapInstance}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

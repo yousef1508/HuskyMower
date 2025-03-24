@@ -4,14 +4,14 @@ import { useToast } from "@/hooks/use-toast";
 import { AutomowerStatus } from "@shared/schema";
 
 export const useAutomowers = () => {
-  return useQuery({
+  return useQuery<AutomowerStatus[]>({
     queryKey: ["/api/automower/mowers"],
     staleTime: 30000, // 30s stale time as per requirements
   });
 };
 
 export const useAutomowerStatus = (mowerId: string) => {
-  return useQuery({
+  return useQuery<AutomowerStatus>({
     queryKey: ["/api/automower/mowers", mowerId],
     staleTime: 30000, // 30s stale time
     enabled: !!mowerId,
@@ -24,8 +24,10 @@ export const useControlMower = () => {
   
   return useMutation({
     mutationFn: async ({ mowerId, action }: { mowerId: string; action: string }) => {
-      const res = await apiRequest("POST", `/api/automower/mowers/${mowerId}/action`, { action });
-      return res.json();
+      return apiRequest(`/api/automower/mowers/${mowerId}/action`, {
+        method: 'POST', 
+        body: JSON.stringify({ action })
+      });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/automower/mowers"] });

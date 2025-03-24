@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useGeofences, useZones, useDeleteGeofence, useDeleteZone } from '@/hooks/use-geofencing';
 import { useAutomowers } from '@/hooks/use-automower';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Plus, Trash2, Edit, MapPin } from 'lucide-react';
 import type { Geofence, Zone, GeoPosition, AutomowerStatus } from '@shared/schema';
 
@@ -91,8 +92,8 @@ const GeofencingPage: React.FC = () => {
   
   // Determine center position for map based on mowers
   const getCenterPosition = (): [number, number] => {
-    if (mowers && mowers.length > 0) {
-      const mower = mowers.find(m => m.latitude && m.longitude);
+    if (mowers && Array.isArray(mowers) && mowers.length > 0) {
+      const mower = mowers.find((m: AutomowerStatus) => m.latitude && m.longitude);
       if (mower && mower.latitude && mower.longitude) {
         return [mower.latitude, mower.longitude];
       }
@@ -146,7 +147,7 @@ const GeofencingPage: React.FC = () => {
                   <GeofencingMap
                     geofences={activeTab === 'geofences' ? geofences || [] : []}
                     zones={activeTab === 'zones' ? zones || [] : []}
-                    mowers={mowers || []}
+                    mowers={(mowers || []) as AutomowerStatus[]}
                     center={getCenterPosition()}
                     onGeofenceClick={(geofence) => handleEditClick(geofence, 'geofence')}
                     onZoneClick={(zone) => handleEditClick(zone, 'zone')}
