@@ -150,6 +150,26 @@ class AutomowerAPI {
       
       return data.data.map((mower: any) => {
         try {
+          // Extract location data
+          let latitude: number | undefined = undefined;
+          let longitude: number | undefined = undefined;
+          let positions: Array<{latitude: number, longitude: number}> | undefined = undefined;
+          
+          // Check if there's a positions array 
+          if (mower.attributes?.positions && Array.isArray(mower.attributes.positions)) {
+            positions = mower.attributes.positions as Array<{latitude: number, longitude: number}>;
+            
+            // If positions exist, use the last position as the current location
+            if (positions && positions.length > 0) {
+              const lastPosition = positions[positions.length - 1];
+              if (lastPosition) {
+                latitude = lastPosition.latitude;
+                longitude = lastPosition.longitude;
+              }
+            }
+          }
+          
+          // Return complete automower data with location info
           return {
             id: mower.id,
             status: mower.attributes.mower.state,
@@ -160,6 +180,10 @@ class AutomowerAPI {
             model: mower.attributes.system.model,
             serialNumber: mower.attributes.system.serialNumber,
             connectionStatus: mower.attributes.metadata.connected ? "connected" : "disconnected",
+            // Location data for geofencing
+            latitude, 
+            longitude,
+            positions
           };
         } catch (err) {
           console.error("Error mapping mower data:", err, mower);
@@ -194,6 +218,24 @@ class AutomowerAPI {
       }
       
       const mower = await response.json();
+      
+      // Extract location data
+      let latitude: number | undefined = undefined;
+      let longitude: number | undefined = undefined;
+      let positions: Array<{latitude: number, longitude: number}> | undefined = undefined;
+      
+      // Check if there's a positions array 
+      if (mower.data.attributes?.positions && Array.isArray(mower.data.attributes.positions)) {
+        positions = mower.data.attributes.positions;
+        
+        // If positions exist, use the last position as the current location
+        if (positions.length > 0) {
+          const lastPosition = positions[positions.length - 1];
+          latitude = lastPosition.latitude;
+          longitude = lastPosition.longitude;
+        }
+      }
+      
       return {
         id: mower.data.id,
         status: mower.data.attributes.mower.state,
@@ -204,6 +246,10 @@ class AutomowerAPI {
         model: mower.data.attributes.system.model,
         serialNumber: mower.data.attributes.system.serialNumber,
         connectionStatus: mower.data.attributes.metadata.connected ? "connected" : "disconnected",
+        // Location data for geofencing
+        latitude, 
+        longitude,
+        positions
       };
     } catch (error) {
       console.error(`Error fetching mower status for ${mowerId}:`, error);

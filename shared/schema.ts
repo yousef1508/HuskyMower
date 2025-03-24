@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb, varchar, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -100,6 +100,60 @@ export const photosRelations = relations(photos, ({ one }) => ({
   }),
 }));
 
+// Geofences table
+export const geofences = pgTable("geofences", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  // Polygon coordinates in GeoJSON format
+  boundaries: json("boundaries").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  active: boolean("active").default(true),
+  color: text("color").default("#4CAF50"),
+});
+
+// Zones table
+export const zones = pgTable("zones", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  // Polygon coordinates in GeoJSON format
+  boundaries: json("boundaries").notNull(),
+  zoneType: text("zone_type").default("normal"), // 'normal', 'restricted', 'priority'
+  schedule: json("schedule"), // JSON object for zone-specific scheduling
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  active: boolean("active").default(true),
+  color: text("color").default("#2196F3"),
+});
+
+// Mower-Zone assignments
+export const mowerZones = pgTable("mower_zones", {
+  id: serial("id").primaryKey(),
+  mowerId: integer("mower_id").references(() => mowers.id).notNull(),
+  zoneId: integer("zone_id").references(() => zones.id).notNull(),
+  priority: integer("priority").default(1), // Higher number means higher priority
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for geofences and zones
+export const mowerZonesRelations = relations(mowerZones, ({ one }) => ({
+  mower: one(mowers, {
+    fields: [mowerZones.mowerId],
+    references: [mowers.id],
+  }),
+  zone: one(zones, {
+    fields: [mowerZones.zoneId],
+    references: [zones.id],
+  }),
+}));
+
+// Update mowers relations to include zones
+export const mowersRelationsUpdate = relations(mowers, ({ many }) => ({
+  zones: many(mowerZones),
+}));
+
 // Weather data table for caching
 export const weatherData = pgTable("weather_data", {
   id: serial("id").primaryKey(),
@@ -139,6 +193,23 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
   uploadDate: true,
 });
 
+export const insertGeofenceSchema = createInsertSchema(geofences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertZoneSchema = createInsertSchema(zones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMowerZoneSchema = createInsertSchema(mowerZones).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -156,6 +227,15 @@ export type Photo = typeof photos.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 
 export type WeatherData = typeof weatherData.$inferSelect;
+
+export type Geofence = typeof geofences.$inferSelect;
+export type InsertGeofence = z.infer<typeof insertGeofenceSchema>;
+
+export type Zone = typeof zones.$inferSelect;
+export type InsertZone = z.infer<typeof insertZoneSchema>;
+
+export type MowerZone = typeof mowerZones.$inferSelect;
+export type InsertMowerZone = z.infer<typeof insertMowerZoneSchema>;
 
 // Auth-related schemas
 export const loginSchema = z.object({
@@ -176,6 +256,20 @@ export type AutomowerStatus = {
   model: string;
   serialNumber: string;
   connectionStatus: string;
+  // Location data for geofencing
+  latitude?: number;
+  longitude?: number;
+  positions?: Array<{latitude: number, longitude: number}>;
+};
+
+// Geofencing types
+export type GeoPosition = {
+  latitude: number;
+  longitude: number;
+};
+
+export type GeoPolygon = {
+  coordinates: GeoPosition[];
 };
 
 // Weather API response types
