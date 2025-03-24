@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mower } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useRegisterAutomower } from "@/hooks/use-automower";
 import { 
   Dialog, 
   DialogContent, 
@@ -46,9 +47,11 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   const [fileSelected, setFileSelected] = useState(false);
   const [fileName, setFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isMowerRegistered, setIsMowerRegistered] = useState(!!mower.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const registerMower = useRegisterAutomower();
   
   const form = useForm<MaintenanceFormValues>({
     resolver: zodResolver(maintenanceSchema),
@@ -112,8 +115,41 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
     },
   });
   
-  const onSubmit = (data: MaintenanceFormValues) => {
-    mutate(data);
+  // Effect to register mower if it has an automower ID but no database ID
+  useEffect(() => {
+    if (mower.automowerId && !mower.id && !isMowerRegistered) {
+      // Register the mower with the backend
+      registerMower.mutate({ ...mower });
+
+      // Update the registration state
+      setIsMowerRegistered(true);
+    }
+  }, [mower, isMowerRegistered, registerMower]);
+
+  const onSubmit = async (data: MaintenanceFormValues) => {
+    // If the mower isn't registered yet and has an automower ID, register it
+    if (!isMowerRegistered && mower.automowerId) {
+      try {
+        // Register the mower first
+        await registerMower.mutateAsync({ ...mower });
+        // Update registration state
+        setIsMowerRegistered(true);
+        // Update the mower object with data from registration
+        queryClient.invalidateQueries({ queryKey: ["/api/mowers"] });
+        // Wait a moment for the queries to update
+        setTimeout(() => mutate(data), 500);
+      } catch (error) {
+        console.error("Error registering mower before maintenance:", error);
+        toast({
+          title: "Registration Error",
+          description: "Failed to register mower. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Mower already registered, proceed with maintenance record
+      mutate(data);
+    }
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

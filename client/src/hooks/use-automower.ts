@@ -86,10 +86,17 @@ export const useRegisterAutomower = () => {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async (automower: AutomowerStatus) => {
+    mutationFn: async (mower: AutomowerStatus | Mower) => {
+      // Get the correct automower ID based on input type
+      const automowerId = 'automowerId' in mower ? mower.automowerId : mower.id;
+      
+      if (!automowerId) {
+        throw new Error("No valid automower ID found");
+      }
+      
       return apiRequest('/api/automower/register', {
         method: 'POST',
-        body: JSON.stringify({ automowerId: automower.id })
+        body: JSON.stringify({ automowerId })
       });
     },
     onSuccess: (data: Mower) => {
