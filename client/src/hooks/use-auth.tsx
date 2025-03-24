@@ -27,7 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactElement => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,7 +91,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }): React
     const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          await registerWithBackend(firebaseUser);
+          // Just set the user without backend registration on initial load
+          // Backend registration will happen on explicit sign-in
           setUser(firebaseUser);
         } else {
           setUser(null);
@@ -114,4 +115,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }): React
   );
 }
 
-export const useAuth = (): AuthContextType => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  return useContext(AuthContext);
+};
