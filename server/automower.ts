@@ -4,8 +4,8 @@ const AUTOMOWER_AUTH_URL = "https://api.authentication.husqvarnagroup.dev/v1/oau
 const AUTOMOWER_API_URL = "https://api.amc.husqvarna.dev/v1";
 
 // Get these values from environment variables
-const API_KEY = process.env.AUTOMOWER_API_KEY;
-const CLIENT_SECRET = process.env.AUTOMOWER_CLIENT_SECRET;
+const API_KEY = process.env.AUTOMOWER_API_KEY || "b46d3fe8-ed9f-48f1-8cb8-e8b97181b75e";
+const CLIENT_SECRET = process.env.AUTOMOWER_CLIENT_SECRET || "84593f7f-70d2-41a1-8147-4bd558735f5b";
 
 interface AuthToken {
   access_token: string;
@@ -34,27 +34,19 @@ class AutomowerAPI {
         throw new Error("Missing API_KEY or CLIENT_SECRET. Please check environment variables.");
       }
       
+      // According to the Husqvarna API documentation, we only need the content-type header for token request
       const headers: Record<string, string> = {
         "Content-Type": "application/x-www-form-urlencoded"
       };
       
-      // Only add API_KEY to headers if it exists
-      if (API_KEY) {
-        headers["X-Api-Key"] = API_KEY;
-      }
-      
+      // Prepare parameters according to documentation
       const params: Record<string, string> = {
-        grant_type: "client_credentials"
+        grant_type: "client_credentials",
+        client_id: API_KEY,
+        client_secret: CLIENT_SECRET
       };
       
-      // Only add client_id and client_secret if they exist
-      if (API_KEY) {
-        params.client_id = API_KEY;
-      }
-      
-      if (CLIENT_SECRET) {
-        params.client_secret = CLIENT_SECRET;
-      }
+      console.log("Attempting to get Automower token with credentials");
       
       const response = await fetch(AUTOMOWER_AUTH_URL, {
         method: "POST",
@@ -94,13 +86,12 @@ class AutomowerAPI {
     try {
       const token = await this.getToken();
       
+      // Set headers according to documentation
       const headers: Record<string, string> = {
-        "Authorization": `Bearer ${token}`
+        "Authorization": `Bearer ${token}`,
+        "Authorization-Provider": "husqvarna",
+        "X-Api-Key": API_KEY
       };
-      
-      if (API_KEY) {
-        headers["X-Api-Key"] = API_KEY;
-      }
       
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers`, {
         headers
@@ -134,13 +125,12 @@ class AutomowerAPI {
     try {
       const token = await this.getToken();
       
+      // Set headers according to documentation
       const headers: Record<string, string> = {
-        "Authorization": `Bearer ${token}`
+        "Authorization": `Bearer ${token}`,
+        "Authorization-Provider": "husqvarna",
+        "X-Api-Key": API_KEY
       };
-      
-      if (API_KEY) {
-        headers["X-Api-Key"] = API_KEY;
-      }
       
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers/${mowerId}`, {
         headers
@@ -170,30 +160,38 @@ class AutomowerAPI {
     }
   }
   
-  async controlMower(mowerId: string, action: 'START' | 'STOP' | 'PARK' | 'PARK_UNTIL_NEXT_TASK' | 'PARK_UNTIL_FURTHER_NOTICE' | 'RESUME_SCHEDULE'): Promise<boolean> {
+  async controlMower(mowerId: string, action: 'Start' | 'Pause' | 'Park' | 'ParkUntilNextSchedule' | 'ParkUntilFurtherNotice' | 'ResumeSchedule'): Promise<boolean> {
     try {
       const token = await this.getToken();
       
+      // Set headers according to documentation
       const headers: Record<string, string> = {
         "Authorization": `Bearer ${token}`,
+        "Authorization-Provider": "husqvarna",
+        "X-Api-Key": API_KEY,
         "Content-Type": "application/vnd.api+json"
       };
       
-      if (API_KEY) {
-        headers["X-Api-Key"] = API_KEY;
+      // Create payload according to documentation
+      let payload: any = {
+        data: {
+          type: action
+        }
+      };
+      
+      // Add duration for actions that require it
+      if (action === 'Start' || action === 'Park') {
+        payload.data.attributes = {
+          duration: 60 // Default to 60 minutes, can be made configurable later
+        };
       }
+      
+      console.log(`Sending control command to mower ${mowerId}: ${action}`);
       
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers/${mowerId}/actions`, {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          data: {
-            type: "actions",
-            attributes: {
-              action
-            }
-          }
-        })
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
