@@ -87,10 +87,9 @@ export const useRegisterAutomower = () => {
   
   return useMutation({
     mutationFn: async (automower: AutomowerStatus) => {
-      const mowerData = automowerToMower(automower);
-      return apiRequest('/api/mowers', {
+      return apiRequest('/api/automower/register', {
         method: 'POST',
-        body: JSON.stringify(mowerData)
+        body: JSON.stringify({ automowerId: automower.id })
       });
     },
     onSuccess: (data: Mower) => {

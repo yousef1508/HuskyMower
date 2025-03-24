@@ -284,6 +284,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint to register an automower in the database
+  app.post("/api/automower/register", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { automowerId } = req.body;
+      if (!automowerId) {
+        return res.status(400).json({ message: "Missing automower ID" });
+      }
+      
+      // Check if the automower exists in Husqvarna API
+      const automowerStatus = await automowerAPI.getMowerStatus(automowerId);
+      if (!automowerStatus) {
+        return res.status(404).json({ message: "Automower not found in Husqvarna API" });
+      }
+      
+      // Create the mower in our database
+      const userId = req.session.userId!;
+      
+      // Check if mower already exists with this automowerId
+      const existingMowers = await storage.getMowers(userId);
+      const existingMower = existingMowers.find(m => m.automowerId === automowerId);
+      
+      if (existingMower) {
+        return res.json(existingMower); // Return existing mower if already registered
+      }
+      
+      // Format the data for our database
+      const mowerData = {
+        userId,
+        name: `${automowerStatus.model || "Automower"} (${String(automowerStatus.serialNumber || "").slice(-6) || "Unknown"})`,
+        model: automowerStatus.model || "Husqvarna Automower",
+        serialNumber: automowerStatus.serialNumber ? String(automowerStatus.serialNumber) : `AM-${Date.now()}`,
+        type: "automower",
+        automowerId: automowerStatus.id,
+        latitude: automowerStatus.latitude || null,
+        longitude: automowerStatus.longitude || null,
+        installationDate: new Date(),
+        coverageArea: 0
+      };
+      
+      const mower = await storage.createMower(mowerData);
+      res.status(201).json(mower);
+    } catch (error) {
+      console.error("Error registering automower:", error);
+      res.status(500).json({ message: "Failed to register automower" });
+    }
+  });
+  
   // Notes routes
   app.get("/api/mowers/:mowerId/notes", isAuthenticated, async (req: Request, res: Response) => {
     try {
