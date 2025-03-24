@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "firebase/auth";
 import { onAuthStateChanged } from "../firebase/config";
 import { apiRequest } from "../lib/queryClient";
@@ -27,7 +27,11 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,8 +40,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Register Firebase user with our backend
   const registerWithBackend = async (firebaseUser: User) => {
     try {
-      const idToken = await firebaseUser.getIdToken();
-      
       const response = await apiRequest("POST", "/api/auth/firebase", {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
@@ -88,7 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Listen for Firebase auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged((firebaseUser) => {
       try {
         if (firebaseUser) {
           // Just set the user without backend registration on initial load
@@ -115,6 +117,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 }
 
-export const useAuth = (): AuthContextType => {
+export function useAuth(): AuthContextType {
   return useContext(AuthContext);
-};
+}

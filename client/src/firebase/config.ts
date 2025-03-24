@@ -4,11 +4,11 @@ import { getAuth, signInWithEmailAndPassword, signOut, User } from "firebase/aut
 // Get the Firebase app - if it doesn't exist yet, create it
 // This ensures we don't try to create multiple instances
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDvR61q56SDVdcNLeIOhAGZof0wL7xMEP0",
-  authDomain: import.meta.env.VITE_FIREBASE_PROJECT_ID + ".firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gjersjoengolfclub",
-  storageBucket: import.meta.env.VITE_FIREBASE_PROJECT_ID + ".firebasestorage.app",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:823610815817:web:77b493aee1c06644f21698"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
