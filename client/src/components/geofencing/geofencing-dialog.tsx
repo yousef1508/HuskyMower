@@ -76,7 +76,7 @@ const GeofencingDialog: React.FC<GeofencingDialogProps> = ({
           name,
           description,
           color,
-          zoneType,
+          zoneType: zoneType as 'normal' | 'priority' | 'restricted',
           boundaries: { coordinates: boundaries.length > 0 ? boundaries : (zone?.boundaries as any)?.coordinates || [] },
           active: true
         };
