@@ -242,7 +242,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Automower API routes
   app.get("/api/automower/mowers", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      console.log(`User ${req.session.userId} (${req.session.email}) requesting Automower data`);
       const mowers = await automowerAPI.getMowers();
+      console.log(`Found ${mowers.length} mowers from Automower API`);
       res.json(mowers);
     } catch (error) {
       console.error("Error getting Automower mowers:", error);

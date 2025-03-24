@@ -104,31 +104,43 @@ class WeatherAPI {
   
   async getForecast(latitude = DEFAULT_LATITUDE, longitude = DEFAULT_LONGITUDE): Promise<WeatherForecast[]> {
     try {
+      console.log(`Getting weather forecast for coordinates: ${latitude}, ${longitude}`);
+      
       // Check if we have cached data
       const cachedData = await storage.getWeatherData(latitude, longitude);
       if (cachedData) {
+        console.log("Using cached weather data from database");
         return cachedData.forecast as WeatherForecast[];
       }
       
+      console.log("No cached weather data found, making API request to Norwegian Met Office");
+      
       // No cached data found, make API request
       const locationforecastUrl = `${WEATHER_API_BASE_URL}/locationforecast/2.0/compact?lat=${latitude}&lon=${longitude}`;
+      console.log(`Weather API URL: ${locationforecastUrl}`);
       
-      const response = await fetch(locationforecastUrl, {
-        headers: {
-          'User-Agent': `${this.appName}/1.0 ${this.contactEmail}`
-        }
-      });
+      const headers = {
+        'User-Agent': `${this.appName}/1.0 ${this.contactEmail}`
+      };
+      console.log("Weather API request headers:", headers);
+      
+      const response = await fetch(locationforecastUrl, { headers });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Weather API error (${response.status}): ${errorText}`);
         throw new Error(`Weather API error: ${response.status} ${response.statusText}`);
       }
       
+      console.log("Successfully received weather data from API");
       const data = await response.json();
       
       // Process the forecast data
+      console.log("Processing weather data...");
       const forecast = this.processWeatherData(data);
       
       // Cache the forecast data
+      console.log("Caching weather forecast data to database");
       await storage.saveWeatherData(latitude, longitude, forecast);
       
       return forecast;
