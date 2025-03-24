@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Search, Tool, FileText, Image, Plus } from "lucide-react";
+import { Search, Wrench, FileText, Image, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
@@ -68,7 +68,7 @@ export default function Maintenance() {
             >
               <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-border">
                 <TabsTrigger value="notes" className="flex items-center">
-                  <Tool className="h-4 w-4 mr-2" /> Notes
+                  <Wrench className="h-4 w-4 mr-2" /> Notes
                 </TabsTrigger>
                 <TabsTrigger value="documents" className="flex items-center">
                   <FileText className="h-4 w-4 mr-2" /> Documents
@@ -100,7 +100,7 @@ export default function Maintenance() {
                   </div>
                 ) : !filteredNotes || filteredNotes.length === 0 ? (
                   <div className="text-center py-12">
-                    <Tool className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium mb-2">No maintenance notes found</h3>
                     <p className="text-muted-foreground max-w-md mx-auto mb-6">
                       Keep track of mower maintenance by adding notes about blade replacements, repairs, or regular service.

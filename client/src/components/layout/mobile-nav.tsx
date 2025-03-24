@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Robot, CloudSun, Tool, Menu } from "lucide-react";
+import { LayoutDashboard, Tractor, CloudSun, Wrench, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function MobileNav() {
@@ -7,9 +7,9 @@ export default function MobileNav() {
 
   const menuItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/mowers", label: "Mowers", icon: Robot },
+    { href: "/mowers", label: "Mowers", icon: Tractor },
     { href: "/weather", label: "Weather", icon: CloudSun },
-    { href: "/maintenance", label: "Maintenance", icon: Tool },
+    { href: "/maintenance", label: "Maintenance", icon: Wrench },
     { href: "/more", label: "More", icon: Menu },
   ];
 

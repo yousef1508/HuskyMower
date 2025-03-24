@@ -1,9 +1,17 @@
-import { initializeApp, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User } from "firebase/auth";
 
-// Firebase configuration is already initialized in main.tsx
-// Just get the existing app instance
-const app = getApp();
+// Get the Firebase app - if it doesn't exist yet, create it
+// This ensures we don't try to create multiple instances
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDvR61q56SDVdcNLeIOhAGZof0wL7xMEP0",
+  authDomain: import.meta.env.VITE_FIREBASE_PROJECT_ID + ".firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gjersjoengolfclub",
+  storageBucket: import.meta.env.VITE_FIREBASE_PROJECT_ID + ".firebasestorage.app",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:823610815817:web:77b493aee1c06644f21698"
+};
+
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 

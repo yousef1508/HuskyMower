@@ -1,22 +1,22 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "firebase/auth";
-import { onAuthStateChanged, getCurrentUser } from "../firebase/config";
+import { onAuthStateChanged } from "../firebase/config";
 import { apiRequest } from "../lib/queryClient";
 import { useToast } from "./use-toast";
 
-interface AuthContextType {
+export interface UserProfile {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+}
+
+export interface AuthContextType {
   user: User | null;
   loading: boolean;
   userProfile: UserProfile | null;
   signIn: (user: User) => Promise<void>;
   signOut: () => Promise<void>;
-}
-
-interface UserProfile {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -27,7 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactElement => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -112,6 +112,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => useContext(AuthContext);

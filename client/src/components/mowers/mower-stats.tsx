@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Robot, Play, Zap, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
+import { Tractor, Play, Zap, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
 
 export default function MowerStats() {
   const { data: mowers, isLoading } = useQuery({
@@ -63,7 +63,7 @@ export default function MowerStats() {
     {
       title: "Total Mowers",
       value: stats.total,
-      icon: Robot,
+      icon: Tractor,
       iconColor: "text-primary",
       iconBg: "bg-primary/20",
       change: stats.totalChange,

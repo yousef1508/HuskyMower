@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useControlMower, getStatusDisplay } from "@/hooks/use-automower";
-import { Robot, Pause, Home, CalendarCheck, Tool, Info } from "lucide-react";
+import { Tractor, Pause, Home, CalendarCheck, Wrench, Info } from "lucide-react";
 import MaintenanceModal from "@/components/maintenance/maintenance-modal";
 import { formatDistanceToNow } from "date-fns";
 
@@ -44,7 +44,7 @@ export default function MowerCard({ mower }: MowerCardProps) {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center space-x-4">
               <div className="bg-secondary p-2 rounded-full">
-                <Robot className={`h-5 w-5 ${isOffline ? "text-red-500" : "text-green-500"}`} />
+                <Tractor className={`h-5 w-5 ${isOffline ? "text-red-500" : "text-green-500"}`} />
               </div>
               <div>
                 <h3 className="font-medium">{mower.name}</h3>
@@ -101,7 +101,7 @@ export default function MowerCard({ mower }: MowerCardProps) {
                 disabled={isPending || isOffline}
                 onClick={() => handleAction("START")}
               >
-                <Robot className="h-4 w-4 mr-1.5" /> Start
+                <Tractor className="h-4 w-4 mr-1.5" /> Start
               </Button>
             )}
             
@@ -128,7 +128,7 @@ export default function MowerCard({ mower }: MowerCardProps) {
               className="text-sm"
               onClick={() => setShowMaintenanceModal(true)}
             >
-              <Tool className="h-4 w-4 mr-1.5" /> Maintenance
+              <Wrench className="h-4 w-4 mr-1.5" /> Maintenance
             </Button>
             
             <Button
