@@ -118,8 +118,8 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   // Effect to register mower if it has an automower ID but no database ID
   useEffect(() => {
     if (mower.automowerId && !mower.id && !isMowerRegistered) {
-      // Register the mower with the backend
-      registerMower.mutate({ ...mower });
+      // Register the mower with the backend - only pass the automowerId
+      registerMower.mutate({ id: mower.automowerId } as any);
 
       // Update the registration state
       setIsMowerRegistered(true);
@@ -130,8 +130,8 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
     // If the mower isn't registered yet and has an automower ID, register it
     if (!isMowerRegistered && mower.automowerId) {
       try {
-        // Register the mower first
-        await registerMower.mutateAsync({ ...mower });
+        // Register the mower first - only pass the automowerId
+        await registerMower.mutateAsync({ id: mower.automowerId } as any);
         // Update registration state
         setIsMowerRegistered(true);
         // Update the mower object with data from registration
