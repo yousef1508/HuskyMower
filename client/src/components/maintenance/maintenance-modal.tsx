@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { X, CloudUpload } from "lucide-react";
+import { X, CloudUpload, Loader2 } from "lucide-react";
 
 interface MaintenanceModalProps {
   mower: Mower;
@@ -44,6 +44,9 @@ type MaintenanceFormValues = z.infer<typeof maintenanceSchema>;
 
 export default function MaintenanceModal({ mower, onClose }: MaintenanceModalProps) {
   const [fileSelected, setFileSelected] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -60,11 +63,35 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: MaintenanceFormValues) => {
-      const res = await apiRequest("POST", `/api/mowers/${mower.id}/notes`, {
+      // Build FormData if file is selected
+      if (fileSelected && fileInputRef.current?.files?.length) {
+        const formData = new FormData();
+        formData.append('title', `${data.maintenanceType}: ${data.title}`);
+        formData.append('content', data.content);
+        formData.append('file', fileInputRef.current.files[0]);
+        
+        const res = await fetch(`/api/mowers/${mower.id}/notes`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!res.ok) throw new Error('Failed to upload file');
+        return res.json();
+      }
+      
+      // No file, just send JSON
+      const payload = {
         title: `${data.maintenanceType}: ${data.title}`,
         content: data.content,
+      };
+      
+      const res = await apiRequest(`/api/mowers/${mower.id}/notes`, {
+        method: "POST",
+        body: JSON.stringify(payload)
       });
-      return res.json();
+      
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/mowers/${mower.id}/notes`] });
@@ -75,10 +102,11 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
       });
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error saving maintenance record:", error);
       toast({
         title: "Error",
-        description: "Failed to save maintenance record",
+        description: "Failed to save maintenance record. Please try again.",
         variant: "destructive",
       });
     },
@@ -92,8 +120,13 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
     const files = e.target.files;
     if (files && files.length > 0) {
       setFileSelected(true);
-      // In a real app, we would upload the file here
-      // For now just update the UI
+      setFileName(files[0].name);
+      
+      // Simulate upload for preview if needed
+      setIsUploading(true);
+      setTimeout(() => {
+        setIsUploading(false);
+      }, 1000);
     }
   };
   
@@ -191,8 +224,16 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
                 onClick={() => document.getElementById("file-upload")?.click()}
               >
                 <CloudUpload className="h-10 w-10 text-muted-foreground mb-2" />
-                {fileSelected ? (
-                  <p className="text-sm text-muted-foreground">File selected (upload not implemented)</p>
+                {isUploading ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                  </div>
+                ) : fileSelected ? (
+                  <div className="flex flex-col items-center">
+                    <p className="text-sm text-muted-foreground">{fileName}</p>
+                    <p className="text-xs text-green-500 mt-1">Ready to upload</p>
+                  </div>
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground mb-1">
@@ -208,7 +249,8 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
                   type="file"
                   className="hidden"
                   onChange={handleFileChange}
-                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                  ref={fileInputRef}
                 />
               </div>
             </div>

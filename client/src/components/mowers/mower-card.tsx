@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Mower } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface MowerCardProps {
 export default function MowerCard({ mower }: MowerCardProps) {
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const { mutate: controlMower, isPending } = useControlMower();
+  const [_, setLocation] = useLocation();
   
   const status = getStatusDisplay(mower.status || "unknown");
   const batteryLevel = mower.batteryLevel || 0;
@@ -145,6 +147,7 @@ export default function MowerCard({ mower }: MowerCardProps) {
             <Button
               variant="outline"
               className="text-sm"
+              onClick={() => mower.id && setLocation(`/mowers/${mower.id}`)}
             >
               <Info className="h-4 w-4 mr-1.5" /> Details
             </Button>
