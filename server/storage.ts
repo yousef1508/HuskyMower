@@ -15,6 +15,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
   
   // Mower operations
   getMowers(userId: number): Promise<Mower[]>;
@@ -67,6 +68,14 @@ export class DatabaseStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
+  }
+  
+  async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
   
   // Mower operations

@@ -48,9 +48,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/auth/firebase", async (req: Request, res: Response) => {
     try {
-      const { uid, email, displayName } = req.body;
+      const { uid, email: userEmail, displayName } = req.body;
       
-      if (!uid || !email) {
+      if (!uid || !userEmail) {
         return res.status(400).json({ message: "Missing required fields" });
       }
       
@@ -59,29 +59,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         // User doesn't exist, check if email exists
-        user = await storage.getUserByEmail(email);
+        user = await storage.getUserByEmail(userEmail);
         
         if (user) {
           // Update existing user with Firebase UID
-          user = await storage.updateMower(user.id, { firebaseUid: uid }) as any;
+          user = await storage.updateUser(user.id, { firebaseUid: uid });
         } else {
           // Create new user
+          const username = userEmail.split('@')[0];
           user = await storage.createUser({
-            username: email.split('@')[0],
-            email,
-            name: displayName || email.split('@')[0],
+            username: username,
+            email: userEmail,
+            name: displayName || username,
             firebaseUid: uid,
             password: '' // Not used with Firebase auth
           });
         }
       }
       
+      // Make sure user is defined
+      if (!user) {
+        return res.status(500).json({ message: "Failed to create or find user" });
+      }
+      
+      // At this point, TypeScript knows user is not undefined
+      const userInfo = {
+        id: user.id,
+        email: user.email,
+        name: user.name || "",
+        role: user.role || "user"
+      };
+      
       // Set up session
-      req.session.userId = user.id;
+      req.session.userId = userInfo.id;
       req.session.firebaseUid = uid;
-      req.session.email = user.email;
-      req.session.name = user.name || "";
-      req.session.role = user.role || "user";
+      req.session.email = userInfo.email;
+      req.session.name = userInfo.name;
+      req.session.role = userInfo.role;
       
       res.json({ 
         id: user.id,
