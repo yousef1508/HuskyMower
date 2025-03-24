@@ -109,7 +109,6 @@ export const geofences = pgTable("geofences", {
   // Polygon coordinates in GeoJSON format
   boundaries: json("boundaries").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
   active: boolean("active").default(true),
   color: text("color").default("#4CAF50"),
 });
@@ -123,9 +122,7 @@ export const zones = pgTable("zones", {
   // Polygon coordinates in GeoJSON format
   boundaries: json("boundaries").notNull(),
   zoneType: text("zone_type").default("normal"), // 'normal', 'restricted', 'priority'
-  schedule: json("schedule"), // JSON object for zone-specific scheduling
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
   active: boolean("active").default(true),
   color: text("color").default("#2196F3"),
 });
@@ -198,13 +195,11 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
 export const insertGeofenceSchema = createInsertSchema(geofences).omit({
   id: true,
   createdAt: true,
-  updatedAt: true,
 });
 
 export const insertZoneSchema = createInsertSchema(zones).omit({
   id: true,
   createdAt: true,
-  updatedAt: true,
 });
 
 export const insertMowerZoneSchema = createInsertSchema(mowerZones).omit({

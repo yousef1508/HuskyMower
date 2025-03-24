@@ -21,6 +21,19 @@ function WeatherForecastWithData() {
 
 // Helper function to convert AutomowerStatus to Mower type
 const automowerToMower = (automower: AutomowerStatus): Mower => {
+  const now = new Date();
+  
+  // Parse lastActivity to Date if it exists
+  let lastActivity: Date | null = now;
+  if (automower.lastActivity) {
+    try {
+      lastActivity = new Date(automower.lastActivity);
+    } catch (e) {
+      console.error("Error parsing date:", e);
+      lastActivity = now;
+    }
+  }
+  
   return {
     id: parseInt(automower.id) || Math.floor(Math.random() * 1000), // Fallback to random ID if can't parse
     name: automower.model || "Automower",
@@ -29,17 +42,15 @@ const automowerToMower = (automower: AutomowerStatus): Mower => {
     serialNumber: automower.serialNumber || "",
     status: automower.status || "unknown",
     batteryLevel: automower.batteryLevel || 0,
-    lastActivity: automower.lastActivity || new Date().toISOString(),
+    lastActivity: lastActivity,
     connectionStatus: automower.connectionStatus || "disconnected",
     automowerId: automower.id,
     userId: 1, // Default userId
-    manufactureDate: new Date().toISOString(),
-    purchaseDate: new Date().toISOString(),
-    maintenanceInterval: 30,
-    lastMaintenanceDate: new Date().toISOString(),
-    modeOfOperation: automower.modeOfOperation || "auto",
-    latitude: automower.latitude,
-    longitude: automower.longitude,
+    createdAt: now,
+    coverageArea: null,
+    installationDate: null,
+    latitude: automower.latitude === undefined ? null : automower.latitude,
+    longitude: automower.longitude === undefined ? null : automower.longitude,
   };
 };
 

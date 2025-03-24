@@ -147,7 +147,9 @@ export class DatabaseStorage implements IStorage {
         mower: true
       }
     });
-    return result;
+    
+    // Filter out notes with null mower before returning
+    return result.filter(note => note.mower !== null) as (Note & { mower: Mower })[];
   }
   
   async createNote(note: InsertNote): Promise<Note> {

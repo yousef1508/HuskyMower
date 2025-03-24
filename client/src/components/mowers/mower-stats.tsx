@@ -1,16 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tractor, Play, Zap, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
+import { useAutomowers } from "@/hooks/use-automower";
+import { AutomowerStatus } from "@shared/schema";
 
 export default function MowerStats() {
-  const { data: mowers, isLoading } = useQuery({
-    queryKey: ["/api/mowers"],
-    staleTime: 30000,
-  });
+  // Fetch directly from Automower API for real-time data
+  const { data: automowers, isLoading: autoLoading } = useAutomowers();
+
+  // Log the automowers data to check what we're receiving
+  console.log("Automowers data:", automowers);
   
-  // Calculate stats based on mowers data
+  // Calculate stats based on automower data
   const calculateStats = () => {
-    if (!mowers || !Array.isArray(mowers)) {
+    if (!automowers || !Array.isArray(automowers) || automowers.length === 0) {
       return {
         total: 0,
         active: 0,
@@ -23,29 +25,44 @@ export default function MowerStats() {
       };
     }
     
-    const total = mowers.length;
-    const active = mowers.filter(m => m.status === 'MOWING').length;
-    const charging = mowers.filter(m => m.status === 'CHARGING').length;
-    const offline = mowers.filter(m => 
-      m.status === 'OFF' || m.connectionStatus === 'disconnected'
+    // Count total mowers
+    const total = automowers.length;
+    
+    // Count mowers by status
+    const active = automowers.filter((m: AutomowerStatus) => 
+      m.status === 'MOWING' || m.status === 'LEAVING'
     ).length;
     
-    // Mock changes for now - in a real app this would come from historical data
+    const charging = automowers.filter((m: AutomowerStatus) => 
+      m.status === 'CHARGING' || m.status === 'PARKED_IN_CS'
+    ).length;
+    
+    const offline = automowers.filter((m: AutomowerStatus) => 
+      m.status === 'OFF' || m.connectionStatus === 'disconnected' || 
+      m.status === 'ERROR' || m.status === 'STOPPED_IN_GARDEN'
+    ).length;
+    
+    // Example changes (in a production app, this would come from comparing with historical data)
+    const totalChange = 1; // Added one new mower since last month
+    const activeChange = 2; // Two more mowers active than yesterday
+    const chargingChange = 1; // One more charging than yesterday
+    const offlineChange = 1; // One more offline than yesterday
+    
     return {
       total,
       active,
       charging,
       offline,
-      totalChange: 1,
-      activeChange: 2,
-      chargingChange: -1,
-      offlineChange: 1
+      totalChange,
+      activeChange,
+      chargingChange,
+      offlineChange
     };
   };
   
   const stats = calculateStats();
   
-  if (isLoading) {
+  if (autoLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
@@ -85,8 +102,7 @@ export default function MowerStats() {
       iconColor: "text-yellow-500",
       iconBg: "bg-yellow-500/20",
       change: stats.chargingChange,
-      changeText: "Since yesterday",
-      negative: true
+      changeText: "Since yesterday"
     },
     {
       title: "Offline",
@@ -95,8 +111,7 @@ export default function MowerStats() {
       iconColor: "text-red-500",
       iconBg: "bg-red-500/20",
       change: stats.offlineChange,
-      changeText: "Since yesterday",
-      negative: false
+      changeText: "Since yesterday"
     }
   ];
   
@@ -113,17 +128,19 @@ export default function MowerStats() {
             </div>
             <p className="text-3xl font-bold mt-2">{card.value}</p>
             <div className="mt-4 flex items-center text-xs text-muted-foreground">
-              <span className={`flex items-center ${card.change > 0 ? 'text-green-500' : 'text-red-500'} mr-2`}>
-                {card.change > 0 ? (
-                  <>
-                    <ArrowUp className="mr-1 h-3 w-3" /> {card.change}
-                  </>
-                ) : (
-                  <>
-                    <ArrowDown className="mr-1 h-3 w-3" /> {Math.abs(card.change)}
-                  </>
-                )}
-              </span>
+              {card.change !== undefined && card.change !== 0 && (
+                <span className={`flex items-center ${(card.change || 0) > 0 ? 'text-green-500' : 'text-red-500'} mr-2`}>
+                  {(card.change || 0) > 0 ? (
+                    <>
+                      <ArrowUp className="mr-1 h-3 w-3" /> {card.change}
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDown className="mr-1 h-3 w-3" /> {Math.abs(card.change || 0)}
+                    </>
+                  )}
+                </span>
+              )}
               <span>{card.changeText}</span>
             </div>
           </CardContent>
