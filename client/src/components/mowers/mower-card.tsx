@@ -18,9 +18,10 @@ export default function MowerCard({ mower }: MowerCardProps) {
   
   const status = getStatusDisplay(mower.status || "unknown");
   const batteryLevel = mower.batteryLevel || 0;
+  // Format last activity timestamp if it exists
   const lastActivity = mower.lastActivity 
     ? formatDistanceToNow(new Date(mower.lastActivity), { addSuffix: true })
-    : "Unknown";
+    : "Just now"; // Default to "Just now" if no timestamp
   
   // Battery color based on level
   const getBatteryColor = () => {

@@ -14,7 +14,7 @@ const automowerToMower = (automower: AutomowerStatus): Mower => {
   return {
     id: parseInt(automower.id) || Math.floor(Math.random() * 10000),
     userId: 0, // Not used in display
-    name: automower.model || "Automower",
+    name: `${automower.model || "Automower"} (${automower.serialNumber.slice(-6)})`,
     model: automower.model || "",
     serialNumber: automower.serialNumber || "",
     type: "automower",
