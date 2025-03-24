@@ -209,8 +209,8 @@ export default function MowerDetails() {
                   <Separator className="my-2" />
                   <dl className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                     <div className="grid grid-cols-3 gap-1">
-                      <dt className="col-span-1 text-muted-foreground">Purchase Date:</dt>
-                      <dd className="col-span-2">{mower.purchaseDate ? format(new Date(mower.purchaseDate), 'MMM d, yyyy') : 'Unknown'}</dd>
+                      <dt className="col-span-1 text-muted-foreground">Installation Date:</dt>
+                      <dd className="col-span-2">{mower.installationDate ? format(new Date(mower.installationDate), 'MMM d, yyyy') : 'Unknown'}</dd>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-1">
@@ -219,16 +219,16 @@ export default function MowerDetails() {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-1">
-                      <dt className="col-span-1 text-muted-foreground">Working Hours:</dt>
-                      <dd className="col-span-2">{mower.workingHours || 'Unknown'}</dd>
+                      <dt className="col-span-1 text-muted-foreground">Creation Date:</dt>
+                      <dd className="col-span-2">{mower.createdAt ? format(new Date(mower.createdAt), 'MMM d, yyyy') : 'Unknown'}</dd>
                     </div>
                   </dl>
                 </div>
                 
                 <div>
-                  <h3 className="font-medium">Notes</h3>
+                  <h3 className="font-medium">Additional Information</h3>
                   <Separator className="my-2" />
-                  <p className="text-sm">{mower.notes || 'No notes available'}</p>
+                  <p className="text-sm">View maintenance history for detailed notes about this mower.</p>
                 </div>
               </CardContent>
             </Card>
