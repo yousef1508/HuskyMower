@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { AutomowerStatus } from "@shared/schema";
+import { AutomowerStatus, Mower } from "@shared/schema";
 
 export const useAutomowers = () => {
   return useQuery<AutomowerStatus[]>({
@@ -55,6 +55,60 @@ export const useControlMower = () => {
         variant: "destructive",
       });
     },
+  });
+};
+
+// Convert AutomowerStatus to a format that can be saved in the database
+export const automowerToMower = (automower: AutomowerStatus): Mower => {
+  return {
+    id: parseInt(automower.id.substring(0, 8), 16) || Math.floor(Math.random() * 10000),
+    userId: 1, // Default user ID
+    name: `${automower.model || "Automower"} (${String(automower.serialNumber || "").slice(-6) || "Unknown"})`,
+    model: automower.model || "",
+    serialNumber: automower.serialNumber ? String(automower.serialNumber) : "",
+    type: "automower",
+    status: automower.status || "UNKNOWN",
+    batteryLevel: automower.batteryLevel || 0,
+    lastActivity: automower.lastActivity ? new Date(automower.lastActivity) : new Date(),
+    connectionStatus: automower.connectionStatus || "disconnected",
+    automowerId: automower.id,
+    latitude: automower.latitude || null,
+    longitude: automower.longitude || null,
+    installationDate: new Date(),
+    coverageArea: 0,
+    createdAt: new Date()
+  };
+};
+
+// Hook to register an automower in the database
+export const useRegisterAutomower = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (automower: AutomowerStatus) => {
+      const mowerData = automowerToMower(automower);
+      return apiRequest('/api/mowers', {
+        method: 'POST',
+        body: JSON.stringify(mowerData)
+      });
+    },
+    onSuccess: (data: Mower) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mowers"] });
+      toast({
+        title: "Mower Registered",
+        description: `Successfully registered ${data.name} in the database.`,
+      });
+      return data;
+    },
+    onError: (error) => {
+      console.error("Failed to register mower:", error);
+      toast({
+        title: "Registration Error",
+        description: "Failed to register mower in the database.",
+        variant: "destructive",
+      });
+    }
   });
 };
 

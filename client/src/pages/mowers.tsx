@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,37 +6,13 @@ import { Card, CardHeader } from "@/components/ui/card";
 import MowerList from "@/components/mowers/mower-list";
 import { Search, RefreshCw, Plus } from "lucide-react";
 import { Mower, AutomowerStatus } from "@shared/schema";
-import { useAutomowers } from "@/hooks/use-automower";
+import { useAutomowers, useRegisterAutomower, automowerToMower } from "@/hooks/use-automower";
 import { useToast } from "@/hooks/use-toast";
-
-// Helper function to convert AutomowerStatus to Mower format
-const automowerToMower = (automower: AutomowerStatus): Mower => {
-  return {
-    id: parseInt(automower.id) || Math.floor(Math.random() * 10000),
-    userId: 0, // Not used in display
-    name: `${automower.model || "Automower"} (${String(automower.serialNumber || "").slice(-6) || "Unknown"})`,
-    model: automower.model || "",
-    serialNumber: automower.serialNumber || "",
-    type: "automower",
-    status: automower.status,
-    batteryLevel: automower.batteryLevel,
-    lastActivity: automower.lastActivity,
-    connectionStatus: automower.connectionStatus,
-    automowerId: automower.id,
-    // Convert string dates to Date objects
-    purchaseDate: new Date(),
-    warrantyExpiration: new Date(),
-    createdAt: new Date(),
-    // Fields not used but needed for type compatibility
-    installationDate: null,
-    coverageArea: null,
-    latitude: null,
-    longitude: null
-  };
-};
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Mowers() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [storedMowerIds, setStoredMowerIds] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Fetch automowers from Husqvarna API
@@ -47,9 +23,45 @@ export default function Mowers() {
     isError: automowerError
   } = useAutomowers();
 
+  // Register mower mutation
+  const registerMutation = useRegisterAutomower();
+  
+  // Fetch existing mowers to check if we need to register any
+  const fetchStoredMowers = async () => {
+    try {
+      const storedMowers = await apiRequest('/api/mowers');
+      const storedIds = storedMowers.map((mower: Mower) => mower.automowerId);
+      setStoredMowerIds(storedIds);
+      return storedIds;
+    } catch (error) {
+      console.error("Error fetching stored mowers:", error);
+      return [];
+    }
+  };
+  
+  // Register automowers that don't exist in the database
+  useEffect(() => {
+    if (automowerData && automowerData.length > 0) {
+      (async () => {
+        const storedIds = await fetchStoredMowers();
+        
+        for (const automower of automowerData) {
+          if (!storedIds.includes(automower.id)) {
+            console.log("Registering mower:", automower.id);
+            try {
+              await registerMutation.mutateAsync(automower);
+            } catch (error) {
+              console.error("Failed to register mower:", automower.id, error);
+            }
+          }
+        }
+      })();
+    }
+  }, [automowerData]);
+
   // Convert AutomowerStatus array to Mower array
-  const mowers = automowerData ? automowerData.map(automowerToMower) : [];
-  const isLoading = automowerLoading;
+  const mowers = automowerData ? automowerData.map(automower => automowerToMower(automower)) : [];
+  const isLoading = automowerLoading || registerMutation.isPending;
 
   // Handle refresh
   const handleRefresh = async () => {
