@@ -11,6 +11,8 @@ import Weather from "./pages/weather";
 import Maintenance from "./pages/maintenance";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
+// Make sure this component is typed properly
+
 // Protected route component
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, [x: string]: any }) {
   const { user, loading } = useAuth();

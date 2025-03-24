@@ -19,19 +19,20 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+// Create a default context with dummy implementations that will be overwritten
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   userProfile: null,
-  signIn: async () => {},
-  signOut: async () => {},
+  signIn: async (_user: User) => { /* Default empty implementation */ },
+  signOut: async () => { /* Default empty implementation */ },
 });
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
+export function AuthProvider({ children }: AuthProviderProps): React.ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
