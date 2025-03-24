@@ -103,6 +103,7 @@ export const photosRelations = relations(photos, ({ one }) => ({
 // Geofences table
 export const geofences = pgTable("geofences", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
   name: text("name").notNull(),
   description: text("description"),
   // Polygon coordinates in GeoJSON format
@@ -116,6 +117,7 @@ export const geofences = pgTable("geofences", {
 // Zones table
 export const zones = pgTable("zones", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
   name: text("name").notNull(),
   description: text("description"),
   // Polygon coordinates in GeoJSON format
