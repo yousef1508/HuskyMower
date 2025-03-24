@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Tractor, CloudSun, Wrench, Calendar, FileText, UserCog, Info, CheckCircle } from "lucide-react";
+import { LayoutDashboard, Tractor, CloudSun, Wrench, Calendar, FileText, UserCog, Info, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
@@ -10,6 +10,7 @@ export default function Sidebar() {
     { href: "/mowers", label: "Mowers", icon: Tractor },
     { href: "/weather", label: "Weather", icon: CloudSun },
     { href: "/maintenance", label: "Maintenance", icon: Wrench },
+    { href: "/geofencing", label: "Geofencing", icon: MapPin },
     { href: "/schedule", label: "Schedule", icon: Calendar },
     { href: "/reports", label: "Reports", icon: FileText },
     { href: "/settings", label: "Settings", icon: UserCog },

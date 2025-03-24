@@ -9,6 +9,7 @@ import Dashboard from "./pages/dashboard";
 import Mowers from "./pages/mowers";
 import Weather from "./pages/weather";
 import Maintenance from "./pages/maintenance";
+import Geofencing from "./pages/geofencing";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
 // Make sure this component is typed properly
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/mowers" component={() => <ProtectedRoute component={Mowers} />} />
       <Route path="/weather" component={() => <ProtectedRoute component={Weather} />} />
       <Route path="/maintenance" component={() => <ProtectedRoute component={Maintenance} />} />
+      <Route path="/geofencing" component={() => <ProtectedRoute component={Geofencing} />} />
       <Route component={NotFound} />
     </Switch>
   );
