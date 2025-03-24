@@ -22,7 +22,9 @@ class AutomowerAPI {
   
   constructor() {
     // Initialize token
-    this.refreshToken();
+    this.refreshToken().catch(err => {
+      console.error("Failed to initialize Automower API token, will retry on actual API calls:", err.message);
+    });
   }
   
   private async refreshToken(): Promise<string> {
@@ -81,7 +83,8 @@ class AutomowerAPI {
       
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to get mowers: ${response.status} ${errorText}`);
+        console.error(`Failed to get mowers: ${response.status} ${errorText}`);
+        return [];
       }
       
       const data = await response.json();
@@ -98,11 +101,11 @@ class AutomowerAPI {
       }));
     } catch (error) {
       console.error("Error fetching mowers:", error);
-      throw error;
+      return [];
     }
   }
   
-  async getMowerStatus(mowerId: string): Promise<AutomowerStatus> {
+  async getMowerStatus(mowerId: string): Promise<AutomowerStatus | null> {
     try {
       const token = await this.getToken();
       
@@ -115,7 +118,8 @@ class AutomowerAPI {
       
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to get mower status: ${response.status} ${errorText}`);
+        console.error(`Failed to get mower status: ${response.status} ${errorText}`);
+        return null;
       }
       
       const mower = await response.json();
@@ -132,7 +136,7 @@ class AutomowerAPI {
       };
     } catch (error) {
       console.error(`Error fetching mower status for ${mowerId}:`, error);
-      throw error;
+      return null;
     }
   }
   
@@ -159,13 +163,14 @@ class AutomowerAPI {
       
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to control mower: ${response.status} ${errorText}`);
+        console.error(`Failed to control mower: ${response.status} ${errorText}`);
+        return false;
       }
       
       return true;
     } catch (error) {
       console.error(`Error controlling mower ${mowerId} with action ${action}:`, error);
-      throw error;
+      return false;
     }
   }
 }

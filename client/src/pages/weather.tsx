@@ -3,7 +3,7 @@ import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import WeatherForecast from "@/components/weather/weather-forecast";
+import WeatherForecastComponent from "@/components/weather/weather-forecast";
 import { useWeatherForecast } from "@/hooks/use-weather";
 import { MapPin, RefreshCw } from "lucide-react";
 
@@ -81,7 +81,7 @@ export default function Weather() {
         </Card>
 
         {/* Weather forecast */}
-        <WeatherForecast 
+        <WeatherForecastComponent 
           forecast={forecast}
           isLoading={isLoading}
           latitude={activeCoords.lat}

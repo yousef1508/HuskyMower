@@ -8,8 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Mowers from "@/pages/mowers";
 import Weather from "@/pages/weather";
 import Maintenance from "@/pages/maintenance";
-import { AuthProvider } from "./hooks/use-auth.tsx";
-import { useAuth } from "./hooks/use-auth.tsx";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 // Protected route component
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, [x: string]: any }) {

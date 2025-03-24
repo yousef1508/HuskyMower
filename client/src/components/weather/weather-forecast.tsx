@@ -22,7 +22,7 @@ interface WeatherForecastProps {
   longitude?: number;
 }
 
-export default function WeatherForecast({
+export default function WeatherForecastComponent({
   forecast,
   isLoading,
   latitude = 59.7907,
