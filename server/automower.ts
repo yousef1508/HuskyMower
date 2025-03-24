@@ -226,13 +226,15 @@ class AutomowerAPI {
       
       // Check if there's a positions array 
       if (mower.data.attributes?.positions && Array.isArray(mower.data.attributes.positions)) {
-        positions = mower.data.attributes.positions;
+        positions = mower.data.attributes.positions as Array<{latitude: number, longitude: number}>;
         
         // If positions exist, use the last position as the current location
-        if (positions.length > 0) {
+        if (positions && positions.length > 0) {
           const lastPosition = positions[positions.length - 1];
-          latitude = lastPosition.latitude;
-          longitude = lastPosition.longitude;
+          if (lastPosition) {
+            latitude = lastPosition.latitude;
+            longitude = lastPosition.longitude;
+          }
         }
       }
       

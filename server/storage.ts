@@ -1,8 +1,10 @@
 import {
-  users, mowers, notes, documents, photos, weatherData,
+  users, mowers, notes, documents, photos, weatherData, geofences, zones, mowerZones,
   type User, type InsertUser, type Mower, type InsertMower,
   type Note, type InsertNote, type Document, type InsertDocument,
-  type Photo, type InsertPhoto, type WeatherData, type WeatherForecast
+  type Photo, type InsertPhoto, type WeatherData, type WeatherForecast,
+  type Geofence, type InsertGeofence, type Zone, type InsertZone,
+  type MowerZone, type InsertMowerZone, type GeoPosition, type GeoPolygon
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
