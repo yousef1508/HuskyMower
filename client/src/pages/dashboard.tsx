@@ -74,8 +74,7 @@ export default function Dashboard() {
   
   // Convert automowers to the mower format for display
   const automowersAsMowers = automowers?.map(automowerToMower) || [];
-  const allMowers = [...(automowersAsMowers || [])];
-  const isLoading = mowersLoading || automowersLoading;
+  const isLoading = automowersLoading;
 
   return (
     <AppLayout title="Dashboard">
