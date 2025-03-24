@@ -1,0 +1,54 @@
+Build a full-stack TypeScript application for Husqvarna robotic lawnmower management with the following specifications:
+
+Core Requirements:
+1. React frontend with TailwindCSS and shadcn/ui components using dark mode
+2. Express backend with secure user authentication via Passport.js and session storage
+3. Direct Husqvarna Automower API integration with proper authentication and caching
+4. Norwegian Met Office (yr.no) weather integration for lawn condition forecasting
+5. Maintenance tracking with notes, documents, and photos for each mower
+6. PostgreSQL database integration for persistent data storage
+
+Technical Implementation:
+- Use React Query for state management with proper cache invalidation (30s stale time)
+- Create a single consolidated file for each major feature (authentication, mower management, weather)
+- Implement Firebase authentication only for user management (not for data storage)
+- Set up proper TypeScript interfaces for all data models in a single shared schema file
+- Use Drizzle ORM for database interactions with PostgreSQL
+
+User Experience:
+- Design a tab-based interface for switching between standard mowers and Automowers
+- Include status monitoring with battery level, activity status, and last activity time
+- Implement action buttons for start, stop, pause, park, home, and resume schedule
+- Add document/photo management with upload capabilities (10MB limit)
+- Create a weather page showing 4-day forecasts with mowing condition indicators
+
+Security:
+- Implement proper API key protection for both Automower and Weather APIs
+- Set up authentication middleware for all API routes
+- Ensure frontend components only render when data is available
+
+API Credentials & Configuration:
+- Husqvarna Automower API:
+  - Application Key: b46d3fe8-ed9f-48f1-8cb8-e8b97181b75e
+  - Client Secret: 84593f7f-70d2-41a1-8147-4bd558735f5b
+  - Authentication endpoint: https://api.authentication.husqvarnagroup.dev/v1/oauth2/token
+  - API endpoint: https://api.amc.husqvarna.dev/v1
+- Weather API (yr.no):
+  - Base URL: https://api.met.no/weatherapi
+  - User-Agent header required with application name and contact email
+  - Use Gjersjøen coordinates: latitude 59.7907, longitude 10.7686
+- Firebase Authentication:
+  - Admin account credentials: gjersjoengolfklubb@gmail.com/Gjersjøen2013
+  - Test admin account: jeroen.vrijens@gmail.com/Gjersjøen2013
+
+Database Configuration:
+- PostgreSQL database with Drizzle ORM
+- Database structure should include tables for:
+  - users (id, username, email, password, name, createdAt)
+  - mowers (id, userId, name, model, serialNumber, coverageArea, installationDate, status, batteryLevel, lastActivity, createdAt)
+  - notes (id, mowerId, title, content, imageUrl, imageCaption, createdAt)
+  - documents (id, mowerId, filename, filesize, fileType, fileUrl, uploadDate)
+  - photos (id, mowerId, caption, fileUrl, uploadDate)
+- Implement connect-pg-simple for PostgreSQL session storage
+
+Focus on creating a clean, maintainable codebase with minimal files and efficient code organization. Avoid creating separate files for small components and consolidate related functionality.
