@@ -118,7 +118,20 @@ class AutomowerAPI {
       }
       
       const data = await response.json();
-      console.log("Successfully fetched mowers data:", JSON.stringify(data, null, 2));
+      // Log just a summary of the data structure to avoid excessive logging
+      console.log(`Found ${data.data?.length || 0} mowers from Automower API`);
+      
+      // Check if there's location/position data
+      if (data.data && data.data.length > 0) {
+        console.log("Checking for location data in mower response");
+        const firstMower = data.data[0];
+        if (firstMower.attributes?.positions) {
+          console.log("Found position data in mower response:", 
+            firstMower.attributes.positions.slice(0, 2)); // Log just a few positions
+        } else {
+          console.log("No position data found in mower attributes");
+        }
+      }
       
       if (!data.data || !Array.isArray(data.data)) {
         console.error("Unexpected response format from Automower API - no data array", data);
