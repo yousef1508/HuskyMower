@@ -7,6 +7,7 @@ import NotFound from "./pages/not-found";
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
 import Mowers from "./pages/mowers";
+import MowerDetails from "./pages/mower-details";
 import Weather from "./pages/weather";
 import Maintenance from "./pages/maintenance";
 import Geofencing from "./pages/geofencing";
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/mowers" component={() => <ProtectedRoute component={Mowers} />} />
+      <Route path="/mowers/:id" component={() => <ProtectedRoute component={MowerDetails} />} />
       <Route path="/weather" component={() => <ProtectedRoute component={Weather} />} />
       <Route path="/maintenance" component={() => <ProtectedRoute component={Maintenance} />} />
       <Route path="/geofencing" component={() => <ProtectedRoute component={Geofencing} />} />

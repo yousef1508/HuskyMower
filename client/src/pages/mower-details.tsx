@@ -196,7 +196,7 @@ export default function MowerDetails() {
                       </dd>
                       
                       <dt className="col-span-1 text-muted-foreground">Coverage:</dt>
-                      <dd className="col-span-2">{mower.coverage ? `${mower.coverage} m²` : 'Unknown'}</dd>
+                      <dd className="col-span-2">{mower.coverageArea ? `${mower.coverageArea} m²` : 'Unknown'}</dd>
                       
                       <dt className="col-span-1 text-muted-foreground">Zones:</dt>
                       <dd className="col-span-2">Coming soon</dd>
