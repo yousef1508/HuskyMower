@@ -4,8 +4,8 @@ const AUTOMOWER_AUTH_URL = "https://api.authentication.husqvarnagroup.dev/v1/oau
 const AUTOMOWER_API_URL = "https://api.amc.husqvarna.dev/v1";
 
 // Get these values from environment variables
-const API_KEY = process.env.AUTOMOWER_API_KEY || "b46d3fe8-ed9f-48f1-8cb8-e8b97181b75e";
-const CLIENT_SECRET = process.env.AUTOMOWER_CLIENT_SECRET || "84593f7f-70d2-41a1-8147-4bd558735f5b";
+const API_KEY = process.env.AUTOMOWER_API_KEY;
+const CLIENT_SECRET = process.env.AUTOMOWER_CLIENT_SECRET;
 
 interface AuthToken {
   access_token: string;
@@ -29,17 +29,37 @@ class AutomowerAPI {
   
   private async refreshToken(): Promise<string> {
     try {
+      // Check if API_KEY and CLIENT_SECRET are available
+      if (!API_KEY || !CLIENT_SECRET) {
+        throw new Error("Missing API_KEY or CLIENT_SECRET. Please check environment variables.");
+      }
+      
+      const headers: Record<string, string> = {
+        "Content-Type": "application/x-www-form-urlencoded"
+      };
+      
+      // Only add API_KEY to headers if it exists
+      if (API_KEY) {
+        headers["X-Api-Key"] = API_KEY;
+      }
+      
+      const params: Record<string, string> = {
+        grant_type: "client_credentials"
+      };
+      
+      // Only add client_id and client_secret if they exist
+      if (API_KEY) {
+        params.client_id = API_KEY;
+      }
+      
+      if (CLIENT_SECRET) {
+        params.client_secret = CLIENT_SECRET;
+      }
+      
       const response = await fetch(AUTOMOWER_AUTH_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-Api-Key": API_KEY
-        },
-        body: new URLSearchParams({
-          grant_type: "client_credentials",
-          client_id: API_KEY,
-          client_secret: CLIENT_SECRET
-        })
+        headers,
+        body: new URLSearchParams(params)
       });
       
       if (!response.ok) {
@@ -74,11 +94,16 @@ class AutomowerAPI {
     try {
       const token = await this.getToken();
       
+      const headers: Record<string, string> = {
+        "Authorization": `Bearer ${token}`
+      };
+      
+      if (API_KEY) {
+        headers["X-Api-Key"] = API_KEY;
+      }
+      
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "X-Api-Key": API_KEY
-        }
+        headers
       });
       
       if (!response.ok) {
@@ -109,11 +134,16 @@ class AutomowerAPI {
     try {
       const token = await this.getToken();
       
+      const headers: Record<string, string> = {
+        "Authorization": `Bearer ${token}`
+      };
+      
+      if (API_KEY) {
+        headers["X-Api-Key"] = API_KEY;
+      }
+      
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers/${mowerId}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "X-Api-Key": API_KEY
-        }
+        headers
       });
       
       if (!response.ok) {
@@ -144,13 +174,18 @@ class AutomowerAPI {
     try {
       const token = await this.getToken();
       
+      const headers: Record<string, string> = {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/vnd.api+json"
+      };
+      
+      if (API_KEY) {
+        headers["X-Api-Key"] = API_KEY;
+      }
+      
       const response = await fetch(`${AUTOMOWER_API_URL}/mowers/${mowerId}/actions`, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "X-Api-Key": API_KEY,
-          "Content-Type": "application/vnd.api+json"
-        },
+        headers,
         body: JSON.stringify({
           data: {
             type: "actions",
