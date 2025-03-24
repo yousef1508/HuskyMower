@@ -6,7 +6,11 @@ import { weatherAPI } from "./weather";
 import { authenticate, getCurrentUser } from "./middleware/auth";
 import { sessionMiddleware, isAuthenticated, isAdmin } from "./middleware/session";
 import { z } from "zod";
-import { insertMowerSchema, insertNoteSchema, insertDocumentSchema, insertPhotoSchema, loginSchema } from "@shared/schema";
+import { 
+  insertMowerSchema, insertNoteSchema, insertDocumentSchema, 
+  insertPhotoSchema, loginSchema, insertGeofenceSchema,
+  insertZoneSchema, insertMowerZoneSchema 
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up session middleware
@@ -470,6 +474,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting weather forecast:", error);
       res.status(500).json({ message: "Failed to get weather forecast" });
+    }
+  });
+  
+  // Geofencing routes
+  app.get("/api/geofences", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId!;
+      const geofences = await storage.getGeofences(userId);
+      res.json(geofences);
+    } catch (error) {
+      console.error("Error getting geofences:", error);
+      res.status(500).json({ message: "Failed to get geofences" });
+    }
+  });
+  
+  app.get("/api/geofences/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const geofence = await storage.getGeofence(Number(id));
+      
+      if (!geofence) {
+        return res.status(404).json({ message: "Geofence not found" });
+      }
+      
+      res.json(geofence);
+    } catch (error) {
+      console.error(`Error getting geofence (${req.params.id}):`, error);
+      res.status(500).json({ message: "Failed to get geofence" });
+    }
+  });
+  
+  app.post("/api/geofences", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertGeofenceSchema.parse(req.body);
+      const userId = req.session.userId!;
+      
+      const geofence = await storage.createGeofence({
+        ...validatedData,
+        userId
+      });
+      
+      res.status(201).json(geofence);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error("Error creating geofence:", error);
+      res.status(500).json({ message: "Failed to create geofence" });
+    }
+  });
+  
+  app.put("/api/geofences/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const geofence = await storage.getGeofence(Number(id));
+      
+      if (!geofence) {
+        return res.status(404).json({ message: "Geofence not found" });
+      }
+      
+      const updatedGeofence = await storage.updateGeofence(Number(id), req.body);
+      res.json(updatedGeofence);
+    } catch (error) {
+      console.error(`Error updating geofence (${req.params.id}):`, error);
+      res.status(500).json({ message: "Failed to update geofence" });
+    }
+  });
+  
+  app.delete("/api/geofences/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const geofence = await storage.getGeofence(Number(id));
+      
+      if (!geofence) {
+        return res.status(404).json({ message: "Geofence not found" });
+      }
+      
+      await storage.deleteGeofence(Number(id));
+      res.json({ message: "Geofence deleted successfully" });
+    } catch (error) {
+      console.error(`Error deleting geofence (${req.params.id}):`, error);
+      res.status(500).json({ message: "Failed to delete geofence" });
+    }
+  });
+  
+  // Zone routes
+  app.get("/api/zones", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId!;
+      const zones = await storage.getZones(userId);
+      res.json(zones);
+    } catch (error) {
+      console.error("Error getting zones:", error);
+      res.status(500).json({ message: "Failed to get zones" });
+    }
+  });
+  
+  app.get("/api/zones/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const zone = await storage.getZone(Number(id));
+      
+      if (!zone) {
+        return res.status(404).json({ message: "Zone not found" });
+      }
+      
+      res.json(zone);
+    } catch (error) {
+      console.error(`Error getting zone (${req.params.id}):`, error);
+      res.status(500).json({ message: "Failed to get zone" });
+    }
+  });
+  
+  app.post("/api/zones", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertZoneSchema.parse(req.body);
+      const userId = req.session.userId!;
+      
+      const zone = await storage.createZone({
+        ...validatedData,
+        userId
+      });
+      
+      res.status(201).json(zone);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error("Error creating zone:", error);
+      res.status(500).json({ message: "Failed to create zone" });
+    }
+  });
+  
+  app.put("/api/zones/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const zone = await storage.getZone(Number(id));
+      
+      if (!zone) {
+        return res.status(404).json({ message: "Zone not found" });
+      }
+      
+      const updatedZone = await storage.updateZone(Number(id), req.body);
+      res.json(updatedZone);
+    } catch (error) {
+      console.error(`Error updating zone (${req.params.id}):`, error);
+      res.status(500).json({ message: "Failed to update zone" });
+    }
+  });
+  
+  app.delete("/api/zones/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const zone = await storage.getZone(Number(id));
+      
+      if (!zone) {
+        return res.status(404).json({ message: "Zone not found" });
+      }
+      
+      await storage.deleteZone(Number(id));
+      res.json({ message: "Zone deleted successfully" });
+    } catch (error) {
+      console.error(`Error deleting zone (${req.params.id}):`, error);
+      res.status(500).json({ message: "Failed to delete zone" });
+    }
+  });
+  
+  // Mower Zone routes
+  app.get("/api/mowers/:mowerId/zones", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { mowerId } = req.params;
+      const mower = await storage.getMower(Number(mowerId));
+      
+      if (!mower) {
+        return res.status(404).json({ message: "Mower not found" });
+      }
+      
+      // Check if user has access to this mower
+      if (mower.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const mowerZones = await storage.getMowerZones(Number(mowerId));
+      res.json(mowerZones);
+    } catch (error) {
+      console.error(`Error getting zones for mower (${req.params.mowerId}):`, error);
+      res.status(500).json({ message: "Failed to get mower zones" });
+    }
+  });
+  
+  app.post("/api/mowers/:mowerId/zones", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { mowerId } = req.params;
+      const { zoneId } = req.body;
+      
+      if (!zoneId) {
+        return res.status(400).json({ message: "Zone ID is required" });
+      }
+      
+      const mower = await storage.getMower(Number(mowerId));
+      if (!mower) {
+        return res.status(404).json({ message: "Mower not found" });
+      }
+      
+      // Check if user has access to this mower
+      if (mower.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const zone = await storage.getZone(Number(zoneId));
+      if (!zone) {
+        return res.status(404).json({ message: "Zone not found" });
+      }
+      
+      const validatedData = insertMowerZoneSchema.parse({
+        mowerId: Number(mowerId),
+        zoneId: Number(zoneId),
+        scheduledStartTime: req.body.scheduledStartTime,
+        scheduledEndTime: req.body.scheduledEndTime,
+        priority: req.body.priority || 0,
+        daysOfWeek: req.body.daysOfWeek || null
+      });
+      
+      const mowerZone = await storage.assignZoneToMower(validatedData);
+      res.status(201).json(mowerZone);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error(`Error assigning zone to mower (${req.params.mowerId}):`, error);
+      res.status(500).json({ message: "Failed to assign zone to mower" });
+    }
+  });
+  
+  app.delete("/api/mowers/:mowerId/zones/:zoneId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { mowerId, zoneId } = req.params;
+      
+      const mower = await storage.getMower(Number(mowerId));
+      if (!mower) {
+        return res.status(404).json({ message: "Mower not found" });
+      }
+      
+      // Check if user has access to this mower
+      if (mower.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.removeZoneFromMower(Number(mowerId), Number(zoneId));
+      res.json({ message: "Zone removed from mower successfully" });
+    } catch (error) {
+      console.error(`Error removing zone (${req.params.zoneId}) from mower (${req.params.mowerId}):`, error);
+      res.status(500).json({ message: "Failed to remove zone from mower" });
     }
   });
   

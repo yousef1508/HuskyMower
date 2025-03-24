@@ -43,6 +43,25 @@ export interface IStorage {
   // Weather operations
   getWeatherData(latitude: number, longitude: number): Promise<WeatherData | undefined>;
   saveWeatherData(latitude: number, longitude: number, forecast: WeatherForecast[]): Promise<WeatherData>;
+  
+  // Geofencing operations
+  getGeofences(userId: number): Promise<Geofence[]>;
+  getGeofence(id: number): Promise<Geofence | undefined>;
+  createGeofence(geofence: InsertGeofence): Promise<Geofence>;
+  updateGeofence(id: number, data: Partial<Geofence>): Promise<Geofence | undefined>;
+  deleteGeofence(id: number): Promise<boolean>;
+  
+  // Zone operations
+  getZones(userId: number): Promise<Zone[]>;
+  getZone(id: number): Promise<Zone | undefined>;
+  createZone(zone: InsertZone): Promise<Zone>;
+  updateZone(id: number, data: Partial<Zone>): Promise<Zone | undefined>;
+  deleteZone(id: number): Promise<boolean>;
+  
+  // Mower Zone operations
+  getMowerZones(mowerId: number): Promise<(MowerZone & { zone: Zone })[]>;
+  assignZoneToMower(mowerZone: InsertMowerZone): Promise<MowerZone>;
+  removeZoneFromMower(mowerId: number, zoneId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -186,6 +205,90 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return data;
+  }
+  
+  // Geofencing operations
+  async getGeofences(userId: number): Promise<Geofence[]> {
+    return db.select().from(geofences).where(eq(geofences.userId, userId));
+  }
+  
+  async getGeofence(id: number): Promise<Geofence | undefined> {
+    const [geofence] = await db.select().from(geofences).where(eq(geofences.id, id));
+    return geofence;
+  }
+  
+  async createGeofence(geofence: InsertGeofence): Promise<Geofence> {
+    const [newGeofence] = await db.insert(geofences).values(geofence).returning();
+    return newGeofence;
+  }
+  
+  async updateGeofence(id: number, data: Partial<Geofence>): Promise<Geofence | undefined> {
+    const [updatedGeofence] = await db.update(geofences)
+      .set(data)
+      .where(eq(geofences.id, id))
+      .returning();
+    return updatedGeofence;
+  }
+  
+  async deleteGeofence(id: number): Promise<boolean> {
+    await db.delete(geofences).where(eq(geofences.id, id));
+    return true;
+  }
+  
+  // Zone operations
+  async getZones(userId: number): Promise<Zone[]> {
+    return db.select().from(zones).where(eq(zones.userId, userId));
+  }
+  
+  async getZone(id: number): Promise<Zone | undefined> {
+    const [zone] = await db.select().from(zones).where(eq(zones.id, id));
+    return zone;
+  }
+  
+  async createZone(zone: InsertZone): Promise<Zone> {
+    const [newZone] = await db.insert(zones).values(zone).returning();
+    return newZone;
+  }
+  
+  async updateZone(id: number, data: Partial<Zone>): Promise<Zone | undefined> {
+    const [updatedZone] = await db.update(zones)
+      .set(data)
+      .where(eq(zones.id, id))
+      .returning();
+    return updatedZone;
+  }
+  
+  async deleteZone(id: number): Promise<boolean> {
+    await db.delete(zones).where(eq(zones.id, id));
+    return true;
+  }
+  
+  // Mower Zone operations
+  async getMowerZones(mowerId: number): Promise<(MowerZone & { zone: Zone })[]> {
+    const result = await db.query.mowerZones.findMany({
+      where: eq(mowerZones.mowerId, mowerId),
+      with: {
+        zone: true
+      }
+    });
+    
+    return result as (MowerZone & { zone: Zone })[];
+  }
+  
+  async assignZoneToMower(mowerZone: InsertMowerZone): Promise<MowerZone> {
+    const [newMowerZone] = await db.insert(mowerZones).values(mowerZone).returning();
+    return newMowerZone;
+  }
+  
+  async removeZoneFromMower(mowerId: number, zoneId: number): Promise<boolean> {
+    await db.delete(mowerZones)
+      .where(
+        and(
+          eq(mowerZones.mowerId, mowerId),
+          eq(mowerZones.zoneId, zoneId)
+        )
+      );
+    return true;
   }
 }
 
