@@ -130,6 +130,11 @@ class AutomowerAPI {
         return [];
       }
       
+      // Log the first mower's timestamp format
+      if (data.data[0]?.attributes?.metadata?.lastStatusTimestamp) {
+        console.log("Sample lastStatusTimestamp format:", data.data[0].attributes.metadata.lastStatusTimestamp);
+      }
+      
       return data.data.map((mower: any) => {
         try {
           return {

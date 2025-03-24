@@ -19,9 +19,19 @@ export default function MowerCard({ mower }: MowerCardProps) {
   const status = getStatusDisplay(mower.status || "unknown");
   const batteryLevel = mower.batteryLevel || 0;
   // Format last activity timestamp if it exists
-  const lastActivity = mower.lastActivity 
-    ? formatDistanceToNow(new Date(mower.lastActivity), { addSuffix: true })
-    : "Just now"; // Default to "Just now" if no timestamp
+  const getLastActiveText = () => {
+    try {
+      if (mower.lastActivity) {
+        return formatDistanceToNow(new Date(mower.lastActivity), { addSuffix: true });
+      }
+      return mower.connectionStatus === "connected" ? "Online" : "Offline";
+    } catch (error) {
+      console.error("Error formatting lastActivity date:", error);
+      return mower.connectionStatus === "connected" ? "Online" : "Offline";
+    }
+  };
+  
+  const lastActivity = getLastActiveText();
   
   // Battery color based on level
   const getBatteryColor = () => {
