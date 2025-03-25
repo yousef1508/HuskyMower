@@ -7,7 +7,7 @@ import {
   type MowerZone, type InsertMowerZone, type GeoPosition, type GeoPolygon
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { eq, and, or, desc, gte, lte } from "drizzle-orm";
 
 // Interface for all storage operations
 export interface IStorage {
@@ -134,9 +134,26 @@ export class DatabaseStorage implements IStorage {
   
   // Notes operations
   async getNotes(mowerId: number): Promise<Note[]> {
-    return db.select().from(notes)
-      .where(eq(notes.mowerId, mowerId))
-      .orderBy(desc(notes.createdAt));
+    // First try to get the mower to check if it exists and get its serial number
+    const mower = await this.getMower(mowerId);
+    
+    if (mower) {
+      // Use either mowerId or serialNumber to find notes
+      return db.select().from(notes)
+        .where(
+          or(
+            eq(notes.mowerId, mowerId),
+            eq(notes.mowerSerialNumber, mower.serialNumber)
+          )
+        )
+        .orderBy(desc(notes.createdAt));
+    } else {
+      // If no mower found with this ID, just use the ID directly
+      // This handles cases where mower might be using automowerId (string) but stored as number
+      return db.select().from(notes)
+        .where(eq(notes.mowerId, mowerId))
+        .orderBy(desc(notes.createdAt));
+    }
   }
   
   async getRecentNotes(limit: number): Promise<(Note & { mower: Mower })[]> {
@@ -153,6 +170,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createNote(note: InsertNote): Promise<Note> {
+    // If we have a mowerId, try to get the mower's serial number and add it to the note
+    if (note.mowerId) {
+      const mower = await this.getMower(note.mowerId);
+      if (mower && mower.serialNumber) {
+        note.mowerSerialNumber = mower.serialNumber;
+      }
+    }
+    
     const [newNote] = await db.insert(notes).values(note).returning();
     return newNote;
   }

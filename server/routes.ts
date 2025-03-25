@@ -335,7 +335,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/mowers/:mowerId/notes", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -346,7 +361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const notes = await storage.getNotes(Number(mowerId));
+      // Get notes using the mower's database ID
+      const notes = await storage.getNotes(mower.id);
       res.json(notes);
     } catch (error) {
       console.error(`Error getting notes for mower (${req.params.mowerId}):`, error);
