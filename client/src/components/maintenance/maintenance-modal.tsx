@@ -66,6 +66,14 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: MaintenanceFormValues) => {
+      // Check if we have a database ID, if not use automower ID
+      if (!mower.id && mower.automowerId) {
+        throw new Error("Mower must be registered in the database before adding maintenance records");
+      }
+      
+      // Ensure we have a numeric ID for database operations
+      const mowerId = mower.id;
+      
       // Build FormData if file is selected
       if (fileSelected && fileInputRef.current?.files?.length) {
         const formData = new FormData();
@@ -73,7 +81,7 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
         formData.append('content', data.content);
         formData.append('file', fileInputRef.current.files[0]);
         
-        const res = await fetch(`/api/mowers/${mower.id}/notes`, {
+        const res = await fetch(`/api/mowers/${mowerId}/notes`, {
           method: 'POST',
           body: formData,
           credentials: 'include',
@@ -89,7 +97,7 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
         content: data.content,
       };
       
-      const res = await apiRequest(`/api/mowers/${mower.id}/notes`, {
+      const res = await apiRequest(`/api/mowers/${mowerId}/notes`, {
         method: "POST",
         body: JSON.stringify(payload)
       });
@@ -128,14 +136,17 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
 
   const onSubmit = async (data: MaintenanceFormValues) => {
     // If the mower isn't registered yet and has an automower ID, register it
-    if (!isMowerRegistered && mower.automowerId) {
+    if (!mower.id && mower.automowerId) {
       try {
         // Register the mower first - only pass the automowerId
-        await registerMower.mutateAsync({ id: mower.automowerId } as any);
+        const registeredMower = await registerMower.mutateAsync({ id: mower.automowerId } as any);
+        
         // Update registration state
         setIsMowerRegistered(true);
-        // Update the mower object with data from registration
-        queryClient.invalidateQueries({ queryKey: ["/api/mowers"] });
+        
+        // Set the mower with the registered data so we have a database ID
+        mower.id = registeredMower.id;
+        
         // Wait a moment for the queries to update
         setTimeout(() => mutate(data), 500);
       } catch (error) {
