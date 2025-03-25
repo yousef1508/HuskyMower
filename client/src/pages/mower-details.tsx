@@ -19,18 +19,29 @@ export default function MowerDetails() {
   const mowerId = params?.id;
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   
-  // Get mower info from database
-  const { data: mower, isLoading: mowerLoading } = useQuery<Mower>({
-    queryKey: [`/api/mowers/${mowerId}`],
+  // Determine if the ID is a Husqvarna automower ID (UUID format) or our database ID
+  const isAutomowerId = mowerId && mowerId.includes('-');
+  
+  // First try to get mower info from database by checking stored mowers
+  const { data: allMowers, isLoading: allMowersLoading } = useQuery<Mower[]>({
+    queryKey: ['/api/mowers'],
     enabled: !!mowerId,
   });
+  
+  // If it's a Husqvarna automower ID, find it in our stored mowers
+  const storedMower = isAutomowerId && allMowers 
+    ? allMowers.find(m => m.automowerId === mowerId)
+    : allMowers ? allMowers.find(m => m.id === parseInt(mowerId || '0')) : undefined;
+    
+  // If we have a stored mower with matching ID, use that, otherwise use mower from API
+  const mower = storedMower;
   
   // Get real-time status from Automower API if we have the automowerId
   const { data: automowerStatus, isLoading: statusLoading } = useAutomowerStatus(
     mower?.automowerId || ""
   );
   
-  const isLoading = mowerLoading || statusLoading;
+  const isLoading = allMowersLoading || statusLoading;
   
   // Merge data from both sources
   const mowerData = {

@@ -147,7 +147,11 @@ export default function MowerCard({ mower }: MowerCardProps) {
             <Button
               variant="outline"
               className="text-sm"
-              onClick={() => mower.id && setLocation(`/mowers/${mower.id}`)}
+              onClick={() => {
+                // Use automower ID if available, otherwise use database ID
+                const idToUse = mower.automowerId || mower.id;
+                setLocation(`/mowers/${idToUse}`);
+              }}
             >
               <Info className="h-4 w-4 mr-1.5" /> Details
             </Button>
