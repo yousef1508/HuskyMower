@@ -66,6 +66,8 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: MaintenanceFormValues) => {
+      console.log("Regular mutation - mower ID:", mower.id);
+      
       // Make sure we have a valid mower ID
       if (!mower.id) {
         throw new Error("Cannot save maintenance record: Mower not registered in database");
@@ -73,36 +75,54 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
       
       // Build FormData if file is selected
       if (fileSelected && fileInputRef.current?.files?.length) {
+        console.log("Uploading file with maintenance record");
         const formData = new FormData();
         formData.append('title', `${data.maintenanceType}: ${data.title}`);
         formData.append('content', data.content);
         formData.append('file', fileInputRef.current.files[0]);
         
-        const res = await fetch(`/api/mowers/${mower.id}/notes`, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        });
-        
-        if (!res.ok) throw new Error('Failed to upload file');
-        return res.json();
+        try {
+          const res = await fetch(`/api/mowers/${mower.id}/notes`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          });
+          
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error("Error response:", errorText);
+            throw new Error(`Failed to upload file: ${res.status} ${errorText}`);
+          }
+          
+          return res.json();
+        } catch (error) {
+          console.error("File upload error:", error);
+          throw error;
+        }
       }
       
       // No file, just send JSON
+      console.log("Sending JSON maintenance record for mower ID:", mower.id);
       const payload = {
         title: `${data.maintenanceType}: ${data.title}`,
         content: data.content,
       };
       
-      const res = await apiRequest(`/api/mowers/${mower.id}/notes`, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-      
-      return res;
+      try {
+        const res = await apiRequest(`/api/mowers/${mower.id}/notes`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        
+        return res;
+      } catch (error) {
+        console.error("JSON submission error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       if (mower.id) {
+        console.log("Invalidating queries for mower ID:", mower.id);
         queryClient.invalidateQueries({ queryKey: [`/api/mowers/${mower.id}/notes`] });
         queryClient.invalidateQueries({ queryKey: ["/api/notes/recent"] });
       }
@@ -122,9 +142,46 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
     },
   });
   
+  // Additional mutation for registered mowers
+  const saveNoteForRegisteredMower = useMutation({
+    mutationFn: async ({ mowerId, data }: { mowerId: string | number, data: MaintenanceFormValues }) => {
+      // Build payload
+      const payload = {
+        title: `${data.maintenanceType}: ${data.title}`,
+        content: data.content,
+      };
+      
+      // Send request
+      const res = await apiRequest(`/api/mowers/${mowerId}/notes`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      
+      return res;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/mowers/${variables.mowerId}/notes`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notes/recent"] });
+      toast({
+        title: "Maintenance Added",
+        description: "Maintenance record has been saved successfully",
+      });
+      onClose();
+    },
+    onError: (error) => {
+      console.error("Error saving maintenance record:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save maintenance record. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Effect to register mower if it has an automower ID but no database ID
   useEffect(() => {
     if (mower.automowerId && !mower.id && !isMowerRegistered) {
+      console.log("Attempting to register mower:", mower.automowerId);
       // Register the mower with the backend - only pass the automowerId
       registerMower.mutate({ id: mower.automowerId } as any);
 
@@ -134,17 +191,34 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   }, [mower, isMowerRegistered, registerMower]);
 
   const onSubmit = async (data: MaintenanceFormValues) => {
+    console.log("Submitting maintenance record for mower:", mower);
+    
     // If the mower isn't registered yet and has an automower ID, register it
-    if (!isMowerRegistered && mower.automowerId) {
+    if (!mower.id && mower.automowerId) {
       try {
+        console.log("Registering mower before adding maintenance record");
         // Register the mower first - only pass the automowerId
-        await registerMower.mutateAsync({ id: mower.automowerId } as any);
+        const registeredMower = await registerMower.mutateAsync({ id: mower.automowerId } as any);
+        console.log("Mower registered successfully:", registeredMower);
+        
         // Update registration state
         setIsMowerRegistered(true);
+        
         // Update the mower object with data from registration
         queryClient.invalidateQueries({ queryKey: ["/api/mowers"] });
-        // Wait a moment for the queries to update
-        setTimeout(() => mutate(data), 500);
+        
+        // Now the mower should have an ID from the registration
+        if (registeredMower && registeredMower.id) {
+          console.log("Using registered mower ID for maintenance:", registeredMower.id);
+          // Use the additional mutation to save the note
+          saveNoteForRegisteredMower.mutate({ mowerId: registeredMower.id, data });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to get mower ID after registration. Please try again.",
+            variant: "destructive",
+          });
+        }
       } catch (error) {
         console.error("Error registering mower before maintenance:", error);
         toast({
@@ -153,9 +227,17 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
           variant: "destructive",
         });
       }
-    } else {
-      // Mower already registered, proceed with maintenance record
+    } else if (mower.id) {
+      // Mower already has an ID, proceed with maintenance record
+      console.log("Using existing mower ID for maintenance:", mower.id);
       mutate(data);
+    } else {
+      console.error("Cannot add maintenance: No valid mower ID", mower);
+      toast({
+        title: "Error",
+        description: "Cannot add maintenance record: No valid mower ID",
+        variant: "destructive",
+      });
     }
   };
   
