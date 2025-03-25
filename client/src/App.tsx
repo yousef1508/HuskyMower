@@ -51,7 +51,7 @@ function Router() {
   const basePath = getBasePath();
   
   return (
-    <Switch>
+    <Switch base={basePath}>
       <Route path="/login" component={Login} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/mowers" component={() => <ProtectedRoute component={Mowers} />} />

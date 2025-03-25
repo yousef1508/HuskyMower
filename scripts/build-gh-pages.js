@@ -1,6 +1,10 @@
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create the dist directory if it doesn't exist
 if (!fs.existsSync('dist')) {
@@ -52,7 +56,11 @@ try {
   
   // Configure the build for GitHub Pages with base path settings
   console.log('Configuring for GitHub Pages...');
-  execSync('node scripts/configure-gh-pages.js', { stdio: 'inherit' });
+  // Import the configure-gh-pages.js module directly
+  import('./configure-gh-pages.js').catch(err => {
+    console.error('Failed to import configure-gh-pages.js:', err);
+    process.exit(1);
+  });
   
   console.log('Build complete for GitHub Pages deployment!');
 } catch (error) {
