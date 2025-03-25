@@ -357,7 +357,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mowers/:mowerId/notes", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -372,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const note = await storage.createNote({
         ...validatedData,
-        mowerId: Number(mowerId),
+        mowerId: mower.id, // Use the database ID here
         createdBy: req.session.name || req.session.email
       });
       

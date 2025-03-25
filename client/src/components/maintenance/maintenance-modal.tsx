@@ -66,6 +66,11 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: MaintenanceFormValues) => {
+      // Make sure we have a valid mower ID
+      if (!mower.id) {
+        throw new Error("Cannot save maintenance record: Mower not registered in database");
+      }
+      
       // Build FormData if file is selected
       if (fileSelected && fileInputRef.current?.files?.length) {
         const formData = new FormData();
@@ -97,8 +102,10 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
       return res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/mowers/${mower.id}/notes`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notes/recent"] });
+      if (mower.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/mowers/${mower.id}/notes`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/notes/recent"] });
+      }
       toast({
         title: "Maintenance Added",
         description: "Maintenance record has been saved successfully",
