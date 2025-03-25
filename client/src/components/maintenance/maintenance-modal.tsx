@@ -188,9 +188,12 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="maintenance-form-description">
         <DialogHeader>
           <DialogTitle>Mower Maintenance - {mower.name}</DialogTitle>
+          <p id="maintenance-form-description" className="text-sm text-muted-foreground">
+            Add maintenance records to keep track of service history
+          </p>
           <Button
             variant="ghost"
             size="icon"
