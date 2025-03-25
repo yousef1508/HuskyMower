@@ -21,8 +21,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build
+      - name: Create .env.production file
+        run: |
+          echo "VITE_API_BASE_URL=https://your-backend-server-url.com" > client/.env.production
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> client/.env.production
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> client/.env.production
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> client/.env.production
+
+      - name: Build project for GitHub Pages
+        run: node scripts/build-gh-pages.js
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
@@ -35,4 +42,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          cname: yourhusqvarnaapp.com  # Remove or replace with your custom domain if you have one
+          # Remove the line below if you don't have a custom domain
+          # cname: yourhusqvarnaapp.com
