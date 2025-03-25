@@ -28,6 +28,8 @@ jobs:
           echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> client/.env.production
           echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> client/.env.production
           echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> client/.env.production
+          echo "VITE_AUTOMOWER_API_KEY=${{ secrets.AUTOMOWER_API_KEY }}" >> client/.env.production
+          echo "VITE_AUTOMOWER_CLIENT_SECRET=${{ secrets.AUTOMOWER_CLIENT_SECRET }}" >> client/.env.production
 
       - name: Build project for GitHub Pages
         run: node scripts/build-gh-pages.js
@@ -36,6 +38,8 @@ jobs:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_AUTOMOWER_API_KEY: ${{ secrets.AUTOMOWER_API_KEY }}
+          VITE_AUTOMOWER_CLIENT_SECRET: ${{ secrets.AUTOMOWER_CLIENT_SECRET }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
