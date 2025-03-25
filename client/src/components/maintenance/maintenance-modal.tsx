@@ -144,11 +144,18 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
         // Update registration state
         setIsMowerRegistered(true);
         
-        // Set the mower with the registered data so we have a database ID
-        mower.id = registeredMower.id;
-        
-        // Wait a moment for the queries to update
-        setTimeout(() => mutate(data), 500);
+        // Important: mower must be updated with the numeric ID from the database
+        if (registeredMower && typeof registeredMower.id === 'number') {
+          console.log(`Registered mower with ID: ${registeredMower.id}`);
+          
+          // Update the current mower object with database ID
+          mower.id = registeredMower.id;
+          
+          // Now save the maintenance record with the numeric database ID
+          mutate(data);
+        } else {
+          throw new Error("Failed to get valid mower ID from registration");
+        }
       } catch (error) {
         console.error("Error registering mower before maintenance:", error);
         toast({
