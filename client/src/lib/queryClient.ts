@@ -1,8 +1,28 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Helper function to get environment variables that works both in development and production
+const getEnv = (key: string, defaultValue = ''): string => {
+  // For GitHub Pages deployment, we use window.ENV which is set in env-config.js
+  // This is loaded at runtime rather than build time
+  // @ts-ignore - window.ENV is set at runtime in GitHub Pages
+  if (typeof window !== 'undefined' && window.ENV && window.ENV[key]) {
+    // @ts-ignore
+    return window.ENV[key];
+  }
+  
+  // For development and regular builds, use import.meta.env
+  // @ts-ignore
+  if (import.meta && import.meta.env && import.meta.env[key]) {
+    // @ts-ignore
+    return import.meta.env[key];
+  }
+  
+  return defaultValue;
+};
+
 // API base URL - will be used in GitHub Pages deployment
 // Local development will use relative URLs
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = getEnv('VITE_API_BASE_URL', '');
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

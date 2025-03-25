@@ -13,11 +13,23 @@ import Maintenance from "./pages/maintenance";
 import Geofencing from "./pages/geofencing";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
-// Make sure this component is typed properly
+// Helper function to get base path for GitHub Pages
+const getBasePath = (): string => {
+  // Check if we're in production mode
+  if (import.meta.env.MODE === 'production') {
+    return import.meta.env.BASE_URL && import.meta.env.BASE_URL !== '/' 
+      ? import.meta.env.BASE_URL.endsWith('/') 
+        ? import.meta.env.BASE_URL.slice(0, -1) 
+        : import.meta.env.BASE_URL
+      : '';
+  }
+  return '';
+};
 
 // Protected route component
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, [x: string]: any }) {
   const { user, loading } = useAuth();
+  const basePath = getBasePath();
   
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -26,7 +38,8 @@ function ProtectedRoute({ component: Component, ...rest }: { component: React.Co
   }
   
   if (!user) {
-    window.location.href = "/login";
+    // Redirect to login with base path
+    window.location.href = `${basePath}/login`;
     return null;
   }
   
@@ -34,6 +47,9 @@ function ProtectedRoute({ component: Component, ...rest }: { component: React.Co
 }
 
 function Router() {
+  // For GitHub Pages, we need to handle the base path
+  const basePath = getBasePath();
+  
   return (
     <Switch>
       <Route path="/login" component={Login} />

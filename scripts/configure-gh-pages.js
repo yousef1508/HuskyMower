@@ -34,6 +34,8 @@ window.ENV = {
   VITE_FIREBASE_API_KEY: "${process.env.VITE_FIREBASE_API_KEY || ''}",
   VITE_FIREBASE_APP_ID: "${process.env.VITE_FIREBASE_APP_ID || ''}",
   VITE_FIREBASE_PROJECT_ID: "${process.env.VITE_FIREBASE_PROJECT_ID || ''}",
+  VITE_AUTOMOWER_API_KEY: "${process.env.VITE_AUTOMOWER_API_KEY || ''}",
+  VITE_AUTOMOWER_CLIENT_SECRET: "${process.env.VITE_AUTOMOWER_CLIENT_SECRET || ''}",
 };
 `;
   

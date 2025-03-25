@@ -1,14 +1,33 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 
-// Get the Firebase app - if it doesn't exist yet, create it
-// This ensures we don't try to create multiple instances
+// Helper function to get environment variables that will work both in development and production
+const getEnv = (key: string, defaultValue = ''): string => {
+  // For GitHub Pages deployment, we use window.ENV which is set in env-config.js
+  // This is loaded at runtime rather than build time
+  // @ts-ignore - window.ENV is set at runtime in GitHub Pages
+  if (typeof window !== 'undefined' && window.ENV && window.ENV[key]) {
+    // @ts-ignore
+    return window.ENV[key];
+  }
+  
+  // For development and regular builds, use import.meta.env
+  // @ts-ignore
+  if (import.meta && import.meta.env && import.meta.env[key]) {
+    // @ts-ignore
+    return import.meta.env[key];
+  }
+  
+  return defaultValue;
+};
+
+// Get Firebase config from environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: getEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: `${getEnv('VITE_FIREBASE_PROJECT_ID')}.firebaseapp.com`,
+  projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: `${getEnv('VITE_FIREBASE_PROJECT_ID')}.appspot.com`,
+  appId: getEnv('VITE_FIREBASE_APP_ID')
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
