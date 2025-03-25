@@ -1,8 +1,24 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Configure CORS for GitHub Pages and other clients
+app.use(cors({
+  origin: [
+    // Allow GitHub Pages domain
+    /^https:\/\/[a-zA-Z0-9\-]+\.github\.io$/,
+    // Allow development domain
+    "http://localhost:5000",
+    // Add other domains as needed
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

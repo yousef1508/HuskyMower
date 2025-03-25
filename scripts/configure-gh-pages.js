@@ -76,6 +76,7 @@ window.ENV.VITE_FIREBASE_PROJECT_ID = "${envVars.VITE_FIREBASE_PROJECT_ID}";
 window.ENV.VITE_FIREBASE_APP_ID = "${envVars.VITE_FIREBASE_APP_ID}";
 window.ENV.AUTOMOWER_API_KEY = "${envVars.AUTOMOWER_API_KEY}";
 window.ENV.AUTOMOWER_CLIENT_SECRET = "${envVars.AUTOMOWER_CLIENT_SECRET}";
+window.ENV.VITE_API_BASE_URL = "${envVars.VITE_API_BASE_URL}";
 console.log('Runtime environment configuration loaded');
 `;
   
