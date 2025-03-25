@@ -44,7 +44,7 @@ This application is set up for deployment to GitHub Pages for the frontend with 
 
 ### Prerequisites
 
-1. Create a GitHub repository named `testhusqvarna-api`
+1. Use the existing GitHub repository https://github.com/yousef1508/HuskyMower
 2. Set up the following secrets in your GitHub repository settings:
    - `VITE_FIREBASE_API_KEY` - From Firebase Console
    - `VITE_FIREBASE_APP_ID` - From Firebase Console
