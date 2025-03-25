@@ -53,6 +53,7 @@ export const mowersRelations = relations(mowers, ({ one, many }) => ({
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
   mowerId: integer("mower_id").references(() => mowers.id),
+  mowerSerialNumber: text("mower_serial_number"), // Added for direct serial number lookup
   title: text("title").notNull(),
   content: text("content"),
   createdAt: timestamp("created_at").defaultNow(),

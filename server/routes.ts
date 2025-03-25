@@ -388,6 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const note = await storage.createNote({
         ...validatedData,
         mowerId: mower.id, // Use the database ID here
+        mowerSerialNumber: mower.serialNumber, // Store serial number for direct lookups
         createdBy: req.session.name || req.session.email
       });
       
