@@ -2,52 +2,50 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Husqvarna Automower Manager</title>
+  <title>HuskyMower - Page Redirect</title>
   <script>
-    // Redirect script for GitHub Pages
-    // When GitHub Pages serves a 404 response, it serves this HTML file
-    // This script redirects to the index.html with the original URL parameters,
-    // allowing the SPA router to handle the route
-    (function() {
-      // Get the repository name from the URL pathname
-      // e.g., for https://username.github.io/repo-name/page1
-      // pathname is "/repo-name/page1"
-      var pathSegments = window.location.pathname.split('/');
-      var repoName = pathSegments[1]; // First segment after the initial slash
-      
-      // If we're on GitHub Pages (contains github.io)
-      if (window.location.hostname.includes('github.io')) {
-        // Redirect to the root with the full path as a parameter
-        // We strip off the repo name since that's part of the base path
-        var redirectPath = window.location.pathname.substring(
-          window.location.pathname.indexOf(repoName) + repoName.length
-        );
-        
-        // Ensure we have a leading slash
-        if (!redirectPath.startsWith('/')) {
-          redirectPath = '/' + redirectPath;
-        }
-        
-        // Redirect to the index page with proper path
-        window.location.replace(
-          window.location.origin + 
-          '/' + repoName + 
-          '/#' + redirectPath + 
-          window.location.search
-        );
-      } else {
-        // For non-GitHub Pages environments, just redirect to index with the current path
-        window.location.replace(
-          window.location.origin + 
-          '/#' + window.location.pathname + 
-          window.location.search
+    // GitHub Pages SPA 404 solution
+    // Credits: https://github.com/rafgraph/spa-github-pages
+    
+    // Single Page Apps for GitHub Pages
+    // MIT License
+    // https://github.com/rafgraph/spa-github-pages
+    
+    // This script checks to see if a redirect is present in the query string,
+    // converts it back into the correct URL and adds it to the
+    // browser's history using window.history.replaceState(...),
+    // which won't cause the browser to attempt to load the new URL.
+    // When the single page app is loaded further down in this file,
+    // the correct URL will be waiting in the browser's history for
+    // the single page app to route accordingly.
+    (function(l) {
+      if (l.search[1] === '/' ) {
+        var decoded = l.search.slice(1).split('&').map(function(s) { 
+          return s.replace(/~and~/g, '&')
+        }).join('?');
+        window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
         );
       }
-    })();
+    }(window.location))
+  </script>
+  <!-- Immediately redirect to the index page with the current path -->
+  <script>
+    // Parse the repository name from the URL
+    var pathSegments = window.location.pathname.split('/');
+    var repoName = pathSegments[1];
+    var basePath = '';
+    
+    // Check if we're on GitHub Pages
+    if (window.location.hostname.includes('github.io') && repoName !== '') {
+      basePath = '/' + repoName;
+    }
+    
+    // Redirect to the index page, which will handle the routing
+    window.location.href = basePath + '/index.html';
   </script>
 </head>
 <body>
-  <h2>Redirecting...</h2>
-  <p>If you are not redirected automatically, please click <a href="index.html">here</a>.</p>
+  Redirecting...
 </body>
 </html>

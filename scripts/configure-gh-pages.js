@@ -4,92 +4,110 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const distDir = path.resolve(__dirname, '../dist');
 
-// Function to update the index.html for GitHub Pages
+/**
+ * Updates the index.html file to include runtime base path detection for GitHub Pages
+ */
 function updateIndexHtml() {
-  const indexPath = path.join('dist', 'index.html');
+  console.log('Updating index.html for GitHub Pages...');
   
-  if (fs.existsSync(indexPath)) {
-    console.log('Updating index.html for GitHub Pages...');
-    let content = fs.readFileSync(indexPath, 'utf8');
-    
-    // Update asset paths to use relative paths
-    content = content.replace(/src="\//g, 'src="');
-    content = content.replace(/href="\//g, 'href="');
-    
-    fs.writeFileSync(indexPath, content);
-    console.log('index.html updated successfully');
-  } else {
-    console.error('index.html not found in dist folder');
+  const indexPath = path.join(distDir, 'index.html');
+  
+  if (!fs.existsSync(indexPath)) {
+    throw new Error(`${indexPath} does not exist`);
   }
+  
+  let content = fs.readFileSync(indexPath, 'utf8');
+  
+  // Add script to detect the base path at runtime
+  const runtimeScript = `
+    <script>
+      // GitHub Pages dynamic base path detection
+      (function() {
+        window.ENV = window.ENV || {};
+        var pathSegments = window.location.pathname.split('/');
+        var repoName = pathSegments[1];
+        
+        // Check if we're on GitHub Pages (username.github.io/repo-name)
+        if (window.location.hostname.includes('github.io') && repoName !== '') {
+          window.ENV.BASE_PATH = '/' + repoName;
+          console.log('GitHub Pages detected, setting BASE_PATH to:', window.ENV.BASE_PATH);
+          
+          // Add base tag for relative URLs
+          var baseTag = document.createElement('base');
+          baseTag.href = window.ENV.BASE_PATH + '/';
+          document.head.prepend(baseTag);
+        } else {
+          window.ENV.BASE_PATH = '';
+        }
+      })();
+    </script>
+  `;
+  
+  // Insert the script right after the opening head tag
+  content = content.replace('<head>', '<head>' + runtimeScript);
+  
+  // Write the updated content back to index.html
+  fs.writeFileSync(indexPath, content);
+  console.log('index.html updated successfully');
 }
 
-// Function to create a GitHub Pages specific env-config.js file to set
-// environment variables at runtime without rebuilding
+/**
+ * Create a JavaScript file with environment variables for runtime configuration
+ */
 function createEnvConfig() {
-  console.log('Creating runtime environment config for GitHub Pages...');
+  console.log('Creating runtime environment configuration...');
   
-  const envConfigPath = path.join('dist', 'env-config.js');
+  const envVars = {
+    VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY || '',
+    VITE_FIREBASE_PROJECT_ID: process.env.VITE_FIREBASE_PROJECT_ID || '',
+    VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || '',
+    AUTOMOWER_API_KEY: process.env.AUTOMOWER_API_KEY || '',
+    AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || ''
+  };
   
-  // These values will be replaced by actual environment variables in the GitHub Actions workflow
-  const envConfig = `
-window.ENV = {
-  VITE_API_BASE_URL: "${process.env.VITE_API_BASE_URL || 'https://your-backend-server-url.com'}",
-  VITE_FIREBASE_API_KEY: "${process.env.VITE_FIREBASE_API_KEY || ''}",
-  VITE_FIREBASE_APP_ID: "${process.env.VITE_FIREBASE_APP_ID || ''}",
-  VITE_FIREBASE_PROJECT_ID: "${process.env.VITE_FIREBASE_PROJECT_ID || ''}",
-  VITE_AUTOMOWER_API_KEY: "${process.env.VITE_AUTOMOWER_API_KEY || ''}",
-  VITE_AUTOMOWER_CLIENT_SECRET: "${process.env.VITE_AUTOMOWER_CLIENT_SECRET || ''}",
-};
+  const envConfigContent = `
+// Runtime environment configuration
+window.ENV = window.ENV || {};
+window.ENV.VITE_FIREBASE_API_KEY = "${envVars.VITE_FIREBASE_API_KEY}";
+window.ENV.VITE_FIREBASE_PROJECT_ID = "${envVars.VITE_FIREBASE_PROJECT_ID}";
+window.ENV.VITE_FIREBASE_APP_ID = "${envVars.VITE_FIREBASE_APP_ID}";
+window.ENV.AUTOMOWER_API_KEY = "${envVars.AUTOMOWER_API_KEY}";
+window.ENV.AUTOMOWER_CLIENT_SECRET = "${envVars.AUTOMOWER_CLIENT_SECRET}";
+console.log('Runtime environment configuration loaded');
 `;
   
-  fs.writeFileSync(envConfigPath, envConfig);
-  console.log('env-config.js created successfully');
+  // Write the runtime environment configuration file
+  fs.writeFileSync(path.join(distDir, 'env-config.js'), envConfigContent);
   
-  // Update index.html to load env-config.js and GitHub Pages redirect script
-  const indexPath = path.join('dist', 'index.html');
-  if (fs.existsSync(indexPath)) {
-    let content = fs.readFileSync(indexPath, 'utf8');
-    const envConfigScript = '<script src="env-config.js"></script>';
-    const ghPagesScript = '<script src="gh-pages-redirect.js"></script>';
-    
-    // Add the script tags right before the closing head tag
-    if (!content.includes(envConfigScript)) {
-      content = content.replace('</head>', `  ${envConfigScript}\n  </head>`);
-      console.log('Added env-config.js script to index.html');
-    }
-    
-    if (!content.includes(ghPagesScript)) {
-      content = content.replace('</head>', `  ${ghPagesScript}\n  </head>`);
-      console.log('Added gh-pages-redirect.js script to index.html');
-    }
-    
-    fs.writeFileSync(indexPath, content);
-  }
+  // Update index.html to include the env-config.js script
+  const indexPath = path.join(distDir, 'index.html');
+  let indexContent = fs.readFileSync(indexPath, 'utf8');
   
-  // Copy gh-pages-redirect.js to dist
-  const sourceGhRedirect = path.join('client', 'public', 'gh-pages-redirect.js');
-  const destGhRedirect = path.join('dist', 'gh-pages-redirect.js');
-  if (fs.existsSync(sourceGhRedirect)) {
-    fs.copyFileSync(sourceGhRedirect, destGhRedirect);
-    console.log('Copied gh-pages-redirect.js to dist folder');
-  } else {
-    console.warn('Warning: gh-pages-redirect.js not found in client/public directory');
-  }
+  // Add the script just before the closing head tag
+  indexContent = indexContent.replace('</head>', '<script src="env-config.js"></script></head>');
+  
+  // Write the updated content back to index.html
+  fs.writeFileSync(indexPath, indexContent);
+  
+  console.log('Runtime environment configuration created successfully');
 }
 
-// Main function to configure the build for GitHub Pages
-export default async function configureForGitHubPages() {
-  console.log('Configuring build for GitHub Pages deployment...');
+/**
+ * Configure the build output for GitHub Pages deployment
+ */
+export async function configureForGitHubPages() {
+  console.log('Configuring build for GitHub Pages...');
   
+  // Update index.html with runtime base path detection
   updateIndexHtml();
+  
+  // Create runtime environment configuration
   createEnvConfig();
   
-  console.log('GitHub Pages configuration complete');
+  console.log('GitHub Pages configuration completed');
   return true;
 }
 
-// If running directly (not imported)
-if (import.meta.url === `file://${process.argv[1]}`) {
-  configureForGitHubPages();
-}
+export default configureForGitHubPages;
