@@ -437,7 +437,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/mowers/:mowerId/documents", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -448,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const documents = await storage.getDocuments(Number(mowerId));
+      const documents = await storage.getDocuments(mower.id);
       res.json(documents);
     } catch (error) {
       console.error(`Error getting documents for mower (${req.params.mowerId}):`, error);
@@ -459,7 +474,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mowers/:mowerId/documents", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -474,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const document = await storage.createDocument({
         ...validatedData,
-        mowerId: Number(mowerId)
+        mowerId: mower.id // Use the database ID
       });
       
       res.status(201).json(document);
@@ -491,7 +521,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/mowers/:mowerId/photos", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -502,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const photos = await storage.getPhotos(Number(mowerId));
+      const photos = await storage.getPhotos(mower.id);
       res.json(photos);
     } catch (error) {
       console.error(`Error getting photos for mower (${req.params.mowerId}):`, error);
@@ -513,7 +558,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mowers/:mowerId/photos", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -528,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const photo = await storage.createPhoto({
         ...validatedData,
-        mowerId: Number(mowerId)
+        mowerId: mower.id // Use the database ID
       });
       
       res.status(201).json(photo);
@@ -724,7 +784,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/mowers/:mowerId/zones", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { mowerId } = req.params;
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
       
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
@@ -735,7 +810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const mowerZones = await storage.getMowerZones(Number(mowerId));
+      const mowerZones = await storage.getMowerZones(mower.id);
       res.json(mowerZones);
     } catch (error) {
       console.error(`Error getting zones for mower (${req.params.mowerId}):`, error);
@@ -752,7 +827,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Zone ID is required" });
       }
       
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
+      
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
       }
@@ -768,7 +859,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validatedData = insertMowerZoneSchema.parse({
-        mowerId: Number(mowerId),
+        mowerId: mower.id, // Use the database ID
         zoneId: Number(zoneId),
         scheduledStartTime: req.body.scheduledStartTime,
         scheduledEndTime: req.body.scheduledEndTime,
@@ -791,7 +882,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { mowerId, zoneId } = req.params;
       
-      const mower = await storage.getMower(Number(mowerId));
+      let mower;
+      
+      // First try to parse the ID as a number for our database ID
+      const parsedId = parseInt(mowerId);
+      if (!isNaN(parsedId)) {
+        mower = await storage.getMower(parsedId);
+      }
+      
+      // If not found, try by automowerId (UUID) or serialNumber
+      if (!mower) {
+        const userMowers = await storage.getMowers(req.session.userId!);
+        mower = userMowers.find(m => 
+          m.automowerId === mowerId || 
+          m.serialNumber === mowerId
+        );
+      }
+      
       if (!mower) {
         return res.status(404).json({ message: "Mower not found" });
       }
@@ -801,7 +908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      await storage.removeZoneFromMower(Number(mowerId), Number(zoneId));
+      await storage.removeZoneFromMower(mower.id, Number(zoneId));
       res.json({ message: "Zone removed from mower successfully" });
     } catch (error) {
       console.error(`Error removing zone (${req.params.zoneId}) from mower (${req.params.mowerId}):`, error);
