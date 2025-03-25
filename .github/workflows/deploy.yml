@@ -30,6 +30,9 @@ jobs:
           
       - name: Install dependencies
         run: npm ci
+        
+      - name: Set repository name environment variable
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       
       - name: Build project
         run: node scripts/gh-pages-build.js
@@ -40,6 +43,19 @@ jobs:
           AUTOMOWER_API_KEY: ${{ secrets.AUTOMOWER_API_KEY }}
           AUTOMOWER_CLIENT_SECRET: ${{ secrets.AUTOMOWER_CLIENT_SECRET }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_BASE_PATH: /${{ env.REPO_NAME }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          
+      - name: Verify build output
+        run: |
+          echo "Checking build output files and structure..."
+          ls -la ./dist/public
+          echo "Checking if key files exist..."
+          [ -f ./dist/public/index.html ] || (echo "index.html missing" && exit 1)
+          [ -f ./dist/public/404.html ] || (echo "404.html missing" && exit 1)
+          [ -f ./dist/public/env-config.js ] || (echo "env-config.js missing" && exit 1)
+          [ -f ./dist/public/.nojekyll ] || (echo ".nojekyll missing" && exit 1)
+          echo "Build verification completed successfully"
           
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
@@ -59,3 +75,10 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
+      - name: Output deployment URL
+        run: |
+          echo "Deployed successfully to ${{ steps.deployment.outputs.page_url }}"
+          echo "If you encounter any issues accessing the site, please ensure GitHub Pages is enabled in repository settings:"
+          echo "1. Go to repository Settings > Pages"
+          echo "2. Ensure source is set to 'GitHub Actions'"

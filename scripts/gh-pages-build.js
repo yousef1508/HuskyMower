@@ -36,17 +36,18 @@ function updateIndexHtml() {
   
   let content = fs.readFileSync(indexPath, 'utf8');
   
-  // Add script to detect the base path at runtime
+  // Add script to detect the base path at runtime and ensure proper asset paths
   const runtimeScript = `
     <script>
-      // GitHub Pages dynamic base path detection
+      // GitHub Pages dynamic base path detection and asset path correction
       (function() {
         window.ENV = window.ENV || {};
-        var pathSegments = window.location.pathname.split('/');
-        var repoName = pathSegments[1];
+        
+        // Set the repo name for GitHub Pages - hardcoded to match repository name
+        var repoName = 'HuskyMower';
         
         // Check if we're on GitHub Pages (username.github.io/repo-name)
-        if (window.location.hostname.includes('github.io') && repoName !== '') {
+        if (window.location.hostname.includes('github.io')) {
           window.ENV.BASE_PATH = '/' + repoName;
           console.log('GitHub Pages detected, setting BASE_PATH to:', window.ENV.BASE_PATH);
           
@@ -54,6 +55,27 @@ function updateIndexHtml() {
           var baseTag = document.createElement('base');
           baseTag.href = window.ENV.BASE_PATH + '/';
           document.head.prepend(baseTag);
+          
+          // Fix for script and asset loading
+          document.addEventListener('DOMContentLoaded', function() {
+            // Fix script tags
+            var scripts = document.querySelectorAll('script[src]');
+            scripts.forEach(function(script) {
+              if (script.src.startsWith(window.location.origin) && !script.src.includes('/' + repoName + '/')) {
+                var newSrc = script.src.replace(window.location.origin, window.location.origin + '/' + repoName);
+                script.src = newSrc;
+              }
+            });
+            
+            // Fix link tags
+            var links = document.querySelectorAll('link[href]');
+            links.forEach(function(link) {
+              if (link.href.startsWith(window.location.origin) && !link.href.includes('/' + repoName + '/')) {
+                var newHref = link.href.replace(window.location.origin, window.location.origin + '/' + repoName);
+                link.href = newHref;
+              }
+            });
+          });
         } else {
           window.ENV.BASE_PATH = '';
         }
@@ -63,6 +85,10 @@ function updateIndexHtml() {
   
   // Insert the script right after the opening head tag
   content = content.replace('<head>', '<head>' + runtimeScript);
+  
+  // Add a specific base tag for GitHub Pages to ensure proper asset loading
+  const baseTag = '<base href="/HuskyMower/">';
+  content = content.replace('<head>', '<head>' + baseTag);
   
   // Write the updated content back to index.html
   fs.writeFileSync(indexPath, content);
@@ -104,7 +130,7 @@ console.log('Runtime environment configuration loaded');
 }
 
 /**
- * Copy static files needed for GitHub Pages
+ * Copy and create static files needed for GitHub Pages
  */
 function copyStaticFiles() {
   console.log('Copying static files for GitHub Pages...');
@@ -120,6 +146,24 @@ function copyStaticFiles() {
     path.resolve(__dirname, '../client/public/gh-pages-redirect.js'),
     path.resolve(distDir, 'gh-pages-redirect.js')
   );
+  
+  // Create .nojekyll file to prevent GitHub Pages from ignoring files that begin with an underscore
+  fs.writeFileSync(path.resolve(distDir, '.nojekyll'), '');
+  
+  // Create a CNAME file if needed for custom domain (commented out for now)
+  // fs.writeFileSync(path.resolve(distDir, 'CNAME'), 'custom-domain.com');
+  
+  // Create an empty manifest.json file
+  const manifestContent = JSON.stringify({
+    "short_name": "HuskyMower",
+    "name": "Husqvarna Automower Management Platform",
+    "icons": [],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+  }, null, 2);
+  fs.writeFileSync(path.resolve(distDir, 'manifest.json'), manifestContent);
   
   console.log('Static files copied successfully');
 }
