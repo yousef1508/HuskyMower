@@ -46,30 +46,50 @@ window.ENV = {
   fs.writeFileSync(envConfigPath, envConfig);
   console.log('env-config.js created successfully');
   
-  // Update index.html to load env-config.js
+  // Update index.html to load env-config.js and GitHub Pages redirect script
   const indexPath = path.join('dist', 'index.html');
   if (fs.existsSync(indexPath)) {
     let content = fs.readFileSync(indexPath, 'utf8');
-    const scriptTag = '<script src="env-config.js"></script>';
+    const envConfigScript = '<script src="env-config.js"></script>';
+    const ghPagesScript = '<script src="gh-pages-redirect.js"></script>';
     
-    // Add the script tag right before the closing head tag
-    if (!content.includes(scriptTag)) {
-      content = content.replace('</head>', `  ${scriptTag}\n  </head>`);
-      fs.writeFileSync(indexPath, content);
+    // Add the script tags right before the closing head tag
+    if (!content.includes(envConfigScript)) {
+      content = content.replace('</head>', `  ${envConfigScript}\n  </head>`);
       console.log('Added env-config.js script to index.html');
     }
+    
+    if (!content.includes(ghPagesScript)) {
+      content = content.replace('</head>', `  ${ghPagesScript}\n  </head>`);
+      console.log('Added gh-pages-redirect.js script to index.html');
+    }
+    
+    fs.writeFileSync(indexPath, content);
+  }
+  
+  // Copy gh-pages-redirect.js to dist
+  const sourceGhRedirect = path.join('client', 'public', 'gh-pages-redirect.js');
+  const destGhRedirect = path.join('dist', 'gh-pages-redirect.js');
+  if (fs.existsSync(sourceGhRedirect)) {
+    fs.copyFileSync(sourceGhRedirect, destGhRedirect);
+    console.log('Copied gh-pages-redirect.js to dist folder');
+  } else {
+    console.warn('Warning: gh-pages-redirect.js not found in client/public directory');
   }
 }
 
 // Main function to configure the build for GitHub Pages
-function configureForGitHubPages() {
+export default async function configureForGitHubPages() {
   console.log('Configuring build for GitHub Pages deployment...');
   
   updateIndexHtml();
   createEnvConfig();
   
   console.log('GitHub Pages configuration complete');
+  return true;
 }
 
-// Run the configuration
-configureForGitHubPages();
+// If running directly (not imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  configureForGitHubPages();
+}

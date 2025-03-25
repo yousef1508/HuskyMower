@@ -56,11 +56,14 @@ try {
   
   // Configure the build for GitHub Pages with base path settings
   console.log('Configuring for GitHub Pages...');
-  // Import the configure-gh-pages.js module directly
-  import('./configure-gh-pages.js').catch(err => {
+  // Use top-level await to make sure the configure script completes before continuing
+  try {
+    const configureFn = await import('./configure-gh-pages.js');
+    await configureFn.default();
+  } catch (err) {
     console.error('Failed to import configure-gh-pages.js:', err);
     process.exit(1);
-  });
+  }
   
   console.log('Build complete for GitHub Pages deployment!');
 } catch (error) {
