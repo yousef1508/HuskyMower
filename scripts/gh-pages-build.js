@@ -17,7 +17,9 @@ const envVars = {
   VITE_FIREBASE_PROJECT_ID: process.env.VITE_FIREBASE_PROJECT_ID || '',
   VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || '',
   AUTOMOWER_API_KEY: process.env.AUTOMOWER_API_KEY || '',
-  AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || ''
+  AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || '',
+  // Add API base URL for production - this should point to your backend API
+  VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || 'https://husky-mower-backend.replit.app'
 };
 
 /**
@@ -81,6 +83,7 @@ window.ENV.VITE_FIREBASE_PROJECT_ID = "${envVars.VITE_FIREBASE_PROJECT_ID}";
 window.ENV.VITE_FIREBASE_APP_ID = "${envVars.VITE_FIREBASE_APP_ID}";
 window.ENV.AUTOMOWER_API_KEY = "${envVars.AUTOMOWER_API_KEY}";
 window.ENV.AUTOMOWER_CLIENT_SECRET = "${envVars.AUTOMOWER_CLIENT_SECRET}";
+window.ENV.VITE_API_BASE_URL = "${envVars.VITE_API_BASE_URL}";
 console.log('Runtime environment configuration loaded');
 `;
   
