@@ -66,14 +66,6 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: MaintenanceFormValues) => {
-      // Check if we have a database ID, if not use automower ID
-      if (!mower.id && mower.automowerId) {
-        throw new Error("Mower must be registered in the database before adding maintenance records");
-      }
-      
-      // Ensure we have a numeric ID for database operations
-      const mowerId = mower.id;
-      
       // Build FormData if file is selected
       if (fileSelected && fileInputRef.current?.files?.length) {
         const formData = new FormData();
@@ -81,7 +73,7 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
         formData.append('content', data.content);
         formData.append('file', fileInputRef.current.files[0]);
         
-        const res = await fetch(`/api/mowers/${mowerId}/notes`, {
+        const res = await fetch(`/api/mowers/${mower.id}/notes`, {
           method: 'POST',
           body: formData,
           credentials: 'include',
@@ -97,7 +89,7 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
         content: data.content,
       };
       
-      const res = await apiRequest(`/api/mowers/${mowerId}/notes`, {
+      const res = await apiRequest(`/api/mowers/${mower.id}/notes`, {
         method: "POST",
         body: JSON.stringify(payload)
       });
@@ -136,26 +128,16 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
 
   const onSubmit = async (data: MaintenanceFormValues) => {
     // If the mower isn't registered yet and has an automower ID, register it
-    if (!mower.id && mower.automowerId) {
+    if (!isMowerRegistered && mower.automowerId) {
       try {
         // Register the mower first - only pass the automowerId
-        const registeredMower = await registerMower.mutateAsync({ id: mower.automowerId } as any);
-        
+        await registerMower.mutateAsync({ id: mower.automowerId } as any);
         // Update registration state
         setIsMowerRegistered(true);
-        
-        // Important: mower must be updated with the numeric ID from the database
-        if (registeredMower && typeof registeredMower.id === 'number') {
-          console.log(`Registered mower with ID: ${registeredMower.id}`);
-          
-          // Update the current mower object with database ID
-          mower.id = registeredMower.id;
-          
-          // Now save the maintenance record with the numeric database ID
-          mutate(data);
-        } else {
-          throw new Error("Failed to get valid mower ID from registration");
-        }
+        // Update the mower object with data from registration
+        queryClient.invalidateQueries({ queryKey: ["/api/mowers"] });
+        // Wait a moment for the queries to update
+        setTimeout(() => mutate(data), 500);
       } catch (error) {
         console.error("Error registering mower before maintenance:", error);
         toast({
@@ -195,12 +177,9 @@ export default function MaintenanceModal({ mower, onClose }: MaintenanceModalPro
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]" aria-describedby="maintenance-form-description">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Mower Maintenance - {mower.name}</DialogTitle>
-          <p id="maintenance-form-description" className="text-sm text-muted-foreground">
-            Add maintenance records to keep track of service history
-          </p>
           <Button
             variant="ghost"
             size="icon"

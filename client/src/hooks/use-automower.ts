@@ -59,19 +59,24 @@ export const useControlMower = () => {
 };
 
 // Convert AutomowerStatus to a format that can be saved in the database
-export const automowerToMower = (automower: AutomowerStatus): InsertMower => {
-  // Return an InsertMower object that matches the insertMowerSchema requirements
+export const automowerToMower = (automower: AutomowerStatus): Mower => {
   return {
+    id: parseInt(automower.id.substring(0, 8), 16) || Math.floor(Math.random() * 10000),
     userId: 1, // Default user ID
     name: `${automower.model || "Automower"} (${String(automower.serialNumber || "").slice(-6) || "Unknown"})`,
-    model: automower.model || "Husqvarna Automower",
-    serialNumber: automower.serialNumber ? String(automower.serialNumber) : `AM-${Date.now()}`,
+    model: automower.model || "",
+    serialNumber: automower.serialNumber ? String(automower.serialNumber) : "",
     type: "automower",
+    status: automower.status || "UNKNOWN",
+    batteryLevel: automower.batteryLevel || 0,
+    lastActivity: automower.lastActivity ? new Date(automower.lastActivity) : new Date(),
+    connectionStatus: automower.connectionStatus || "disconnected",
     automowerId: automower.id,
     latitude: automower.latitude || null,
     longitude: automower.longitude || null,
     installationDate: new Date(),
-    coverageArea: 0
+    coverageArea: 0,
+    createdAt: new Date()
   };
 };
 
