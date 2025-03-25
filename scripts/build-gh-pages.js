@@ -34,7 +34,8 @@ console.log('Building for GitHub Pages deployment...');
 try {
   // First, build the frontend with Vite
   console.log('Building frontend...');
-  execSync('npm run build', { stdio: 'inherit' });
+  // Pass the base path for GitHub Pages to the build command
+  execSync('npm run build -- --base=/HuskyMower/', { stdio: 'inherit' });
   
   // Create necessary files for GitHub Pages
   console.log('Creating GitHub Pages-specific files...');
