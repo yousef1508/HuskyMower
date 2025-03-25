@@ -96,7 +96,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/mowers" component={() => <ProtectedRoute component={Mowers} />} />
-      <Route path="/mowers/:id" component={(params) => <ProtectedRoute component={MowerDetails} id={params.id} />} />
+      <Route path="/mowers/:id" component={(params) => <ProtectedRoute component={MowerDetails} {...params} />} />
       <Route path="/weather" component={() => <ProtectedRoute component={Weather} />} />
       <Route path="/maintenance" component={() => <ProtectedRoute component={Maintenance} />} />
       <Route path="/geofencing" component={() => <ProtectedRoute component={Geofencing} />} />
