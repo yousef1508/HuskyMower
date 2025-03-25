@@ -50,15 +50,16 @@ function Router() {
   // For GitHub Pages, we need to handle the base path
   const basePath = getBasePath();
   
+  // Wouter doesn't have a base prop for Switch, we need to use it in the Route paths
   return (
-    <Switch base={basePath}>
-      <Route path="/login" component={Login} />
-      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/mowers" component={() => <ProtectedRoute component={Mowers} />} />
-      <Route path="/mowers/:id" component={() => <ProtectedRoute component={MowerDetails} />} />
-      <Route path="/weather" component={() => <ProtectedRoute component={Weather} />} />
-      <Route path="/maintenance" component={() => <ProtectedRoute component={Maintenance} />} />
-      <Route path="/geofencing" component={() => <ProtectedRoute component={Geofencing} />} />
+    <Switch>
+      <Route path={`${basePath}/login`} component={Login} />
+      <Route path={`${basePath}/`} component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path={`${basePath}/mowers`} component={() => <ProtectedRoute component={Mowers} />} />
+      <Route path={`${basePath}/mowers/:id`} component={() => <ProtectedRoute component={MowerDetails} />} />
+      <Route path={`${basePath}/weather`} component={() => <ProtectedRoute component={Weather} />} />
+      <Route path={`${basePath}/maintenance`} component={() => <ProtectedRoute component={Maintenance} />} />
+      <Route path={`${basePath}/geofencing`} component={() => <ProtectedRoute component={Geofencing} />} />
       <Route component={NotFound} />
     </Switch>
   );
