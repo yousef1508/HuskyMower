@@ -104,13 +104,27 @@ function createEnvConfig() {
   const envConfigContent = `
 // Runtime environment configuration
 window.ENV = window.ENV || {};
+// Firebase config - with and without VITE_ prefix for compatibility
+window.ENV.FIREBASE_API_KEY = "${envVars.VITE_FIREBASE_API_KEY}";
+window.ENV.FIREBASE_PROJECT_ID = "${envVars.VITE_FIREBASE_PROJECT_ID}";
+window.ENV.FIREBASE_APP_ID = "${envVars.VITE_FIREBASE_APP_ID}";
 window.ENV.VITE_FIREBASE_API_KEY = "${envVars.VITE_FIREBASE_API_KEY}";
 window.ENV.VITE_FIREBASE_PROJECT_ID = "${envVars.VITE_FIREBASE_PROJECT_ID}";
 window.ENV.VITE_FIREBASE_APP_ID = "${envVars.VITE_FIREBASE_APP_ID}";
+
+// Other environment variables
 window.ENV.AUTOMOWER_API_KEY = "${envVars.AUTOMOWER_API_KEY}";
 window.ENV.AUTOMOWER_CLIENT_SECRET = "${envVars.AUTOMOWER_CLIENT_SECRET}";
+window.ENV.API_BASE_URL = "${envVars.VITE_API_BASE_URL}";
 window.ENV.VITE_API_BASE_URL = "${envVars.VITE_API_BASE_URL}";
-console.log('Runtime environment configuration loaded');
+
+console.log('Runtime environment configuration loaded:', {
+  FIREBASE_PROJECT_ID: window.ENV.FIREBASE_PROJECT_ID,
+  API_BASE_URL: window.ENV.API_BASE_URL,
+  // Don't log API keys for security
+  FIREBASE_API_KEY_SET: !!window.ENV.FIREBASE_API_KEY,
+  FIREBASE_APP_ID_SET: !!window.ENV.FIREBASE_APP_ID
+});
 `;
   
   // Write the runtime environment configuration file

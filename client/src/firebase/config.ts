@@ -5,19 +5,29 @@ import { getAuth, signInWithEmailAndPassword, signOut, User } from "firebase/aut
 const getEnv = (key: string, defaultValue = ''): string => {
   // For GitHub Pages deployment, we use window.ENV which is set in env-config.js
   // This is loaded at runtime rather than build time
-  // @ts-ignore - window.ENV is set at runtime in GitHub Pages
-  if (typeof window !== 'undefined' && window.ENV && window.ENV[key]) {
-    // @ts-ignore
-    return window.ENV[key];
+  if (typeof window !== 'undefined' && window.ENV) {
+    // Check for GitHub Pages style environment variables (without VITE_ prefix)
+    const githubPagesKey = key.replace('VITE_', '');
+    if (window.ENV[githubPagesKey]) {
+      return window.ENV[githubPagesKey];
+    }
+    
+    // Also check with the original key
+    if (window.ENV[key]) {
+      return window.ENV[key];
+    }
   }
   
   // For development and regular builds, use import.meta.env
-  // @ts-ignore
-  if (import.meta && import.meta.env && import.meta.env[key]) {
-    // @ts-ignore
-    return import.meta.env[key];
+  if (import.meta && import.meta.env) {
+    // @ts-ignore - TypeScript doesn't know about import.meta.env
+    if (import.meta.env[key]) {
+      // @ts-ignore
+      return import.meta.env[key];
+    }
   }
   
+  console.log(`Environment variable ${key} not found, using default value: "${defaultValue}"`);
   return defaultValue;
 };
 
@@ -30,7 +40,29 @@ const firebaseConfig = {
   appId: getEnv('VITE_FIREBASE_APP_ID')
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Log Firebase config (without sensitive values) to help with debugging
+console.log('Firebase configuration:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+  apiKeyProvided: !!firebaseConfig.apiKey,
+  appIdProvided: !!firebaseConfig.appId
+});
+
+// Only initialize Firebase if we have the required configuration
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error('Missing required Firebase configuration. Authentication will not work.');
+  console.error('Make sure to set the Firebase environment variables in GitHub repository secrets.');
+  console.error('Required variables: VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_APP_ID');
+}
+
+// Initialize Firebase app
+let app;
+try {
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+} catch (error) {
+  console.error('Error initializing Firebase app:', error);
+  throw error;
+}
 const auth = getAuth(app);
 
 // Sign in with email/password

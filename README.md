@@ -27,7 +27,31 @@ This application uses Firebase for authentication:
    - Project ID (`VITE_FIREBASE_PROJECT_ID`)
 5. Once deployed, add your domain to the authorized domains list in Firebase Console:
    - Go to Authentication > Settings > Authorized domains
-   - Add your GitHub Pages domain (e.g., `yourusername.github.io`)
+   - Add your GitHub Pages domain (e.g., `yourusername.github.io` or the full URL like `yousef1508.github.io/HuskyMower`)
+
+### Troubleshooting Firebase Authentication
+
+If you see the error `Firebase: Error (auth/invalid-api-key)` in the browser console, follow these steps:
+
+1. Verify your Firebase API key is correctly set as a GitHub repository secret
+   - Go to your GitHub repository > Settings > Secrets and variables > Actions
+   - Check that `VITE_FIREBASE_API_KEY` is set with the correct value from Firebase Console
+   - Also verify `VITE_FIREBASE_PROJECT_ID` and `VITE_FIREBASE_APP_ID` are set correctly
+
+2. Make sure your Firebase project is properly configured:
+   - Ensure the Web App is registered in your Firebase project
+   - Check that Authentication is enabled for Email/Password sign-in
+
+3. Ensure your GitHub Pages domain is in the authorized domains list:
+   - Go to Firebase Console > Authentication > Settings > Authorized domains
+   - Add `yousef1508.github.io` (or your GitHub username)
+
+4. After updating any GitHub repository secrets, re-run the GitHub Actions workflow:
+   - Go to the Actions tab in your repository
+   - Select the latest workflow run
+   - Click "Re-run all jobs" button
+
+If the issues persist, you can also verify the environment variables are being correctly injected into the build by checking the browser console for the "Environment configuration loaded" message.
 
 ## Husqvarna Automower API Setup
 

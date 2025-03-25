@@ -34,6 +34,22 @@ jobs:
       - name: Set repository name environment variable
         run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       
+      - name: Check for required secrets
+        run: |
+          if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ]; then
+            echo "::warning::VITE_FIREBASE_API_KEY is not set. Firebase authentication will not work in the deployed application."
+          fi
+          if [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ]; then
+            echo "::warning::VITE_FIREBASE_PROJECT_ID is not set. Firebase authentication will not work in the deployed application."
+          fi
+          if [ -z "${{ secrets.VITE_FIREBASE_APP_ID }}" ]; then
+            echo "::warning::VITE_FIREBASE_APP_ID is not set. Firebase authentication will not work in the deployed application."
+          fi
+          if [ -z "${{ secrets.VITE_API_BASE_URL }}" ]; then
+            echo "::warning::VITE_API_BASE_URL is not set. Using default API URL: https://husky-mower-backend.replit.app"
+          fi
+          # Don't fail the build if secrets are missing, just warn
+      
       - name: Build project
         run: node scripts/gh-pages-build.js
         env:
@@ -42,7 +58,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           AUTOMOWER_API_KEY: ${{ secrets.AUTOMOWER_API_KEY }}
           AUTOMOWER_CLIENT_SECRET: ${{ secrets.AUTOMOWER_CLIENT_SECRET }}
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://husky-mower-backend.replit.app' }}
           VITE_BASE_PATH: /${{ env.REPO_NAME }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           
@@ -78,7 +94,30 @@ jobs:
         
       - name: Output deployment URL
         run: |
-          echo "Deployed successfully to ${{ steps.deployment.outputs.page_url }}"
-          echo "If you encounter any issues accessing the site, please ensure GitHub Pages is enabled in repository settings:"
+          echo "===================================================================================="
+          echo "🎉 Deployed successfully to ${{ steps.deployment.outputs.page_url }} 🎉"
+          echo "===================================================================================="
+          echo ""
+          echo "⚠️ IMPORTANT: Firebase Authentication Configuration"
+          echo "-------------------------------------------------------------------------------------"
+          echo "If you see a Firebase API Key error in the console, please check:"
+          echo "1. Repository Secrets - Verify that you have set up these GitHub secrets:"
+          echo "   - VITE_FIREBASE_API_KEY   - Your Firebase API key"
+          echo "   - VITE_FIREBASE_PROJECT_ID - Your Firebase project ID"
+          echo "   - VITE_FIREBASE_APP_ID    - Your Firebase app ID"
+          echo ""
+          echo "2. Firebase Console Configuration:"
+          echo "   - Ensure email/password authentication is enabled"
+          echo "   - Add your GitHub Pages domain to authorized domains"
+          echo "     (e.g., yousef1508.github.io)"
+          echo ""
+          echo "3. After fixing the secrets, re-run this workflow from Actions tab"
+          echo ""
+          echo "📋 GitHub Pages Configuration"
+          echo "-------------------------------------------------------------------------------------"
+          echo "If you encounter any issues accessing the site, please ensure GitHub Pages is enabled:"
           echo "1. Go to repository Settings > Pages"
           echo "2. Ensure source is set to 'GitHub Actions'"
+          echo ""
+          echo "For more details, check the troubleshooting section in README.md"
+          echo "===================================================================================="
