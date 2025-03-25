@@ -134,9 +134,10 @@ async function main() {
     // Set production mode
     process.env.NODE_ENV = 'production';
     
-    // Build the Vite frontend
+    // Build the Vite frontend with the correct base path
     console.log('Building frontend with Vite...');
-    execSync('npx vite build', { stdio: 'inherit' });
+    // Set the base path for GitHub Pages (/{repo-name}/)
+    execSync('npx vite build --base=/HuskyMower/', { stdio: 'inherit' });
     
     // Make sure the dist directory exists
     if (!fs.existsSync(distDir)) {
