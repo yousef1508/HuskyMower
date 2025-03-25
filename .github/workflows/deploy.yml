@@ -39,6 +39,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           AUTOMOWER_API_KEY: ${{ secrets.AUTOMOWER_API_KEY }}
           AUTOMOWER_CLIENT_SECRET: ${{ secrets.AUTOMOWER_CLIENT_SECRET }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
