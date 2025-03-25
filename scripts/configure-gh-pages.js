@@ -64,7 +64,8 @@ function createEnvConfig() {
     VITE_FIREBASE_PROJECT_ID: process.env.VITE_FIREBASE_PROJECT_ID || '',
     VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || '',
     AUTOMOWER_API_KEY: process.env.AUTOMOWER_API_KEY || '',
-    AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || ''
+    AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || '',
+    VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || 'https://husky-mower-backend.replit.app'
   };
   
   const envConfigContent = `
