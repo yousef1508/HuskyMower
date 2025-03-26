@@ -3,21 +3,57 @@
 <head>
   <meta charset="utf-8">
   <title>HuskyMower - Page Redirect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Add nonce for Content-Security-Policy -->
+  <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https://*; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .loader {
+      display: inline-block;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
   <script>
     // GitHub Pages SPA 404 solution
     // Credits: https://github.com/rafgraph/spa-github-pages
+    // Modified for HuskyMower
     
-    // Single Page Apps for GitHub Pages
-    // MIT License
-    // https://github.com/rafgraph/spa-github-pages
+    // This script takes care of redirecting all routes to the index.html
+    // for single page application routing in GitHub Pages
     
-    // This script checks to see if a redirect is present in the query string,
-    // converts it back into the correct URL and adds it to the
-    // browser's history using window.history.replaceState(...),
-    // which won't cause the browser to attempt to load the new URL.
-    // When the single page app is loaded further down in this file,
-    // the correct URL will be waiting in the browser's history for
-    // the single page app to route accordingly.
+    // First, handle any redirect parameters in the URL
     (function(l) {
       if (l.search[1] === '/' ) {
         var decoded = l.search.slice(1).split('&').map(function(s) { 
@@ -28,59 +64,89 @@
         );
       }
     }(window.location))
-  </script>
-  <!-- Immediately redirect to the index page with the current path -->
-  <script>
-    // Hardcoded repository name for GitHub Pages
-    var repoName = 'HuskyMower';
-    var basePath = '';
     
-    // Check if we're on GitHub Pages
-    if (window.location.hostname.includes('github.io')) {
-      basePath = '/' + repoName;
-      console.log('GitHub Pages detected, setting base path to:', basePath);
-    }
-    
-    // Extract the path after the repo name
-    var fullPath = window.location.pathname;
-    var pathAfterRepo = '';
-    
-    if (window.location.hostname.includes('github.io')) {
-      // For GitHub Pages, we need to handle the repo name in the path
-      var repoPathIndex = fullPath.indexOf('/' + repoName + '/');
-      if (repoPathIndex !== -1) {
-        pathAfterRepo = fullPath.substring(repoPathIndex + repoName.length + 2) || '';
+    // Then, handle the redirect to the main application
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show debug info in console
+      console.group('404 Redirect Debug Info');
+      console.log('Current URL:', window.location.href);
+      console.log('Hostname:', window.location.hostname);
+      console.log('Pathname:', window.location.pathname);
+      console.log('Search:', window.location.search);
+      console.log('Hash:', window.location.hash);
+      
+      // Hardcoded repository name for GitHub Pages
+      var repoName = 'HuskyMower';
+      var basePath = '';
+      
+      // Check if we're on GitHub Pages
+      if (window.location.hostname.includes('github.io')) {
+        basePath = '/' + repoName;
+        console.log('GitHub Pages detected, setting base path to:', basePath);
       }
-    } else {
-      // For local or non-GitHub Pages, just use the full path
-      pathAfterRepo = fullPath;
-    }
-    
-    // Build the redirect URL
-    var redirectUrl = basePath + '/';
-    if (pathAfterRepo && pathAfterRepo !== '/') {
-      // Preserve the path after redirect
-      redirectUrl = basePath + pathAfterRepo;
-    }
-    
-    // Add query parameters and hash if present
-    if (window.location.search) {
-      redirectUrl += window.location.search;
-    }
-    if (window.location.hash) {
-      redirectUrl += window.location.hash;
-    }
-    
-    console.log('Redirecting to:', redirectUrl);
-    
-    // Redirect to the index page with the correct path
-    window.location.href = redirectUrl;
+      
+      // Extract the path after the repo name
+      var fullPath = window.location.pathname;
+      var pathAfterRepo = '';
+      
+      if (window.location.hostname.includes('github.io')) {
+        // For GitHub Pages, we need to handle the repo name in the path
+        var repoPathIndex = fullPath.indexOf('/' + repoName + '/');
+        if (repoPathIndex !== -1) {
+          pathAfterRepo = fullPath.substring(repoPathIndex + repoName.length + 2) || '';
+        } else if (fullPath === '/' + repoName || fullPath === '/' + repoName + '/') {
+          // If we're at the root of the repo, just use '/'
+          pathAfterRepo = '/';
+        } else {
+          // Path doesn't contain repo name, just use as is
+          pathAfterRepo = fullPath;
+        }
+      } else {
+        // For local or non-GitHub Pages, just use the full path
+        pathAfterRepo = fullPath;
+      }
+      
+      console.log('Path after repo:', pathAfterRepo);
+      
+      // Build the redirect URL
+      var redirectUrl = basePath;
+      if (pathAfterRepo && pathAfterRepo !== '/') {
+        // Preserve the path after redirect
+        redirectUrl = basePath + (pathAfterRepo.startsWith('/') ? pathAfterRepo : '/' + pathAfterRepo);
+      }
+      
+      // Add query parameters and hash if present
+      if (window.location.search) {
+        redirectUrl += window.location.search;
+      }
+      if (window.location.hash) {
+        redirectUrl += window.location.hash;
+      }
+      
+      console.log('Redirecting to:', redirectUrl);
+      console.groupEnd();
+      
+      // Update the link in the page for manual navigation
+      var manualLink = document.getElementById('manual-link');
+      if (manualLink) {
+        manualLink.href = redirectUrl || basePath || '/';
+      }
+      
+      // Redirect to the index page with the correct path
+      setTimeout(function() {
+        window.location.href = redirectUrl || basePath || '/';
+      }, 1000); // Small delay to show the loading animation
+    });
   </script>
 </head>
 <body>
-  <div style="font-family: sans-serif; text-align: center; padding: 20px;">
-    <h1>Redirecting...</h1>
-    <p>If you are not automatically redirected, <a href="/HuskyMower/">click here</a> to go to the homepage.</p>
-  </div>
+  <div class="loader"></div>
+  <h1>Redirecting...</h1>
+  <p>You are being redirected to the HuskyMower application.</p>
+  <p>If you are not automatically redirected, <a id="manual-link" href="/HuskyMower/">click here</a> to go to the homepage.</p>
+  <p style="font-size: 0.8em; color: #999;">
+    This is a single-page application hosted on GitHub Pages.<br>
+    Any route other than the root path requires this redirect to work properly.
+  </p>
 </body>
 </html>

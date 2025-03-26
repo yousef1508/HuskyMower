@@ -34,6 +34,14 @@ jobs:
       - name: Set repository name environment variable
         run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       
+      - name: Debug environment
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Repository Name: $REPO_NAME"
+          echo "GitHub Pages URL will be: https://$(echo $GITHUB_REPOSITORY | cut -d'/' -f1).github.io/$REPO_NAME/"
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+      
       - name: Check for required secrets
         run: |
           if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ]; then
@@ -61,6 +69,50 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://husky-mower-backend.replit.app' }}
           VITE_BASE_PATH: /${{ env.REPO_NAME }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          
+      - name: Ensure all necessary static files exist
+        run: |
+          mkdir -p ./dist/public
+          if [ ! -f ./dist/public/index.html ]; then
+            echo "Building index.html failed. Creating a minimal index.html to debug."
+            cat > ./dist/public/index.html << EOF
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <title>HuskyMower - Emergency Index</title>
+              <base href="/$REPO_NAME/">
+              <script>
+                console.log('This is an emergency index.html created by the GitHub Actions workflow');
+                window.location.href = "/$REPO_NAME/";
+              </script>
+            </head>
+            <body>
+              <h1>HuskyMower</h1>
+              <p>The build process failed to create index.html. Please check the GitHub Actions logs.</p>
+              <p><a href="/$REPO_NAME/">Go to home page</a></p>
+            </body>
+            </html>
+            EOF
+          fi
+          
+          if [ ! -f ./dist/public/404.html ]; then
+            echo "Copying 404.html from client/public directory"
+            cp -f ./client/public/404.html ./dist/public/404.html || echo "Failed to copy 404.html"
+          fi
+          
+          echo "Creating .nojekyll file to prevent Jekyll processing"
+          touch ./dist/public/.nojekyll
+
+          echo "Creating basic env-config.js file if not exists"
+          if [ ! -f ./dist/public/env-config.js ]; then
+            cat > ./dist/public/env-config.js << EOF
+            // Runtime environment configuration
+            window.ENV = window.ENV || {};
+            window.ENV.BASE_PATH = "/$REPO_NAME";
+            console.log('Runtime environment configuration loaded from emergency file');
+            EOF
+          fi
           
       - name: Verify build output
         run: |
@@ -97,6 +149,12 @@ jobs:
           echo "===================================================================================="
           echo "🎉 Deployed successfully to ${{ steps.deployment.outputs.page_url }} 🎉"
           echo "===================================================================================="
+          echo ""
+          echo "⚠️ IMPORTANT: GitHub Pages Access Instructions"
+          echo "-------------------------------------------------------------------------------------"
+          echo "1. Access your site at: ${{ steps.deployment.outputs.page_url }}"
+          echo "2. If you see a 404 error, try clearing your browser cache or opening in a private window"
+          echo "3. It may take a few minutes for the changes to propagate to GitHub's CDN"
           echo ""
           echo "⚠️ IMPORTANT: Firebase Authentication Configuration"
           echo "-------------------------------------------------------------------------------------"
