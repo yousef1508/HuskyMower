@@ -73,62 +73,57 @@ jobs:
       - name: Ensure all necessary static files exist
         run: |
           mkdir -p ./dist/public
-          
-          # Create emergency index.html if it doesn't exist
           if [ ! -f ./dist/public/index.html ]; then
             echo "Building index.html failed. Creating a minimal index.html to debug."
-            echo '<!DOCTYPE html>' > ./dist/public/index.html
-            echo '<html>' >> ./dist/public/index.html
-            echo '<head>' >> ./dist/public/index.html
-            echo '  <meta charset="utf-8">' >> ./dist/public/index.html
-            echo '  <title>HuskyMower - Emergency Index</title>' >> ./dist/public/index.html
-            echo "  <base href=\"/${REPO_NAME}/\">" >> ./dist/public/index.html
-            echo '  <script>' >> ./dist/public/index.html
-            echo "    console.log('This is an emergency index.html created by the GitHub Actions workflow');" >> ./dist/public/index.html
-            echo "    window.location.href = \"/${REPO_NAME}/\";" >> ./dist/public/index.html
-            echo '  </script>' >> ./dist/public/index.html
-            echo '</head>' >> ./dist/public/index.html
-            echo '<body>' >> ./dist/public/index.html
-            echo '  <h1>HuskyMower</h1>' >> ./dist/public/index.html
-            echo '  <p>The build process failed to create index.html. Please check the GitHub Actions logs.</p>' >> ./dist/public/index.html
-            echo "  <p><a href=\"/${REPO_NAME}/\">Go to home page</a></p>" >> ./dist/public/index.html
-            echo '</body>' >> ./dist/public/index.html
-            echo '</html>' >> ./dist/public/index.html
+            cat > ./dist/public/index.html << 'INDEXEOF'
+<!DOCTYPE html>
+
+Check failure on line 79 in .github/workflows/deploy.yml
+GitHub Actions / .github/workflows/deploy.yml
+
+Invalid workflow file
+
+You have an error in your yaml syntax on line 79
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HuskyMower - Emergency Index</title>
+  <base href="/HuskyMower/">
+  <script>
+    console.log('This is an emergency index.html created by the GitHub Actions workflow');
+    window.location.href = "/HuskyMower/";
+  </script>
+</head>
+<body>
+  <h1>HuskyMower</h1>
+  <p>The build process failed to create index.html. Please check the GitHub Actions logs.</p>
+  <p><a href="/HuskyMower/">Go to home page</a></p>
+</body>
+</html>
+INDEXEOF
+            # Update repository name in the emergency index.html
+            sed -i "s|/HuskyMower/|/${REPO_NAME}/|g" ./dist/public/index.html
           fi
           
-          # Create 404.html if it doesn't exist
           if [ ! -f ./dist/public/404.html ]; then
             echo "Copying 404.html from client/public directory"
             cp -f ./client/public/404.html ./dist/public/404.html || echo "Failed to copy 404.html"
-            
-            # If copy fails, create a basic 404 page
-            if [ ! -f ./dist/public/404.html ]; then
-              echo '<!DOCTYPE html>' > ./dist/public/404.html
-              echo '<html>' >> ./dist/public/404.html
-              echo '<head>' >> ./dist/public/404.html
-              echo '  <meta charset="utf-8">' >> ./dist/public/404.html
-              echo '  <title>Page Not Found</title>' >> ./dist/public/404.html
-              echo "  <base href=\"/${REPO_NAME}/\">" >> ./dist/public/404.html
-              echo '</head>' >> ./dist/public/404.html
-              echo '<body>' >> ./dist/public/404.html
-              echo '  <h1>404 - Page Not Found</h1>' >> ./dist/public/404.html
-              echo "  <p><a href=\"/${REPO_NAME}/\">Go to home page</a></p>" >> ./dist/public/404.html
-              echo '</body>' >> ./dist/public/404.html
-              echo '</html>' >> ./dist/public/404.html
-            fi
           fi
           
-          # Create .nojekyll file
           echo "Creating .nojekyll file to prevent Jekyll processing"
           touch ./dist/public/.nojekyll
-          
-          # Create env-config.js if it doesn't exist
+
+          echo "Creating basic env-config.js file if not exists"
           if [ ! -f ./dist/public/env-config.js ]; then
-            echo "Creating basic env-config.js file"
-            echo '// Runtime environment configuration' > ./dist/public/env-config.js
-            echo 'window.ENV = window.ENV || {};' >> ./dist/public/env-config.js
-            echo "window.ENV.BASE_PATH = \"/${REPO_NAME}\";" >> ./dist/public/env-config.js
-            echo "console.log('Runtime environment configuration loaded from emergency file');" >> ./dist/public/env-config.js
+            cat > ./dist/public/env-config.js << 'ENVEOF'
+// Runtime environment configuration
+window.ENV = window.ENV || {};
+window.ENV.BASE_PATH = "/HuskyMower";
+console.log('Runtime environment configuration loaded from emergency file');
+ENVEOF
+            # Update repository name in the env-config.js
+            sed -i "s|/HuskyMower|/${REPO_NAME}|g" ./dist/public/env-config.js
           fi
           
       - name: Verify build output
