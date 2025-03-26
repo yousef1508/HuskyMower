@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Path to the dist directory
-const distDir = path.resolve(__dirname, '../dist/public');
+const distDir = path.resolve(__dirname, '../dist');
 
 // Environment configuration
 const envVars = {
@@ -204,7 +204,7 @@ async function main() {
     // Build the Vite frontend with the correct base path
     console.log('Building frontend with Vite...');
     // Set the base path for GitHub Pages (/{repo-name}/)
-    execSync('npx vite build --base=/HuskyMower/ --outDir=dist/public', { stdio: 'inherit' });
+    execSync('npx vite build --base=/HuskyMower/', { stdio: 'inherit' });
     
     // Make sure the dist directory exists
     if (!fs.existsSync(distDir)) {
@@ -213,7 +213,7 @@ async function main() {
     
     // List files in dist directory to debug
     console.log('Contents of dist directory:');
-    execSync('ls -la ./dist/public', { stdio: 'inherit' });
+    execSync('ls -la ./dist', { stdio: 'inherit' });
     
     // Update index.html with runtime base path detection
     updateIndexHtml();
@@ -226,8 +226,8 @@ async function main() {
     
     // Verify the final structure
     console.log('Final contents of dist directory:');
-    execSync('ls -la ./dist/public', { stdio: 'inherit' });
-    execSync('cat ./dist/public/index.html | grep -n "base\\|script\\|link"', { stdio: 'inherit' });
+    execSync('ls -la ./dist', { stdio: 'inherit' });
+    execSync('cat ./dist/index.html | grep -n "base\\|script\\|link"', { stdio: 'inherit' });
     
     console.log('GitHub Pages build completed successfully!');
   } catch (error) {
