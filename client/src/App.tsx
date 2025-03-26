@@ -48,6 +48,21 @@ const useBasePathRouter = () => {
   const basePath = getBasePath();
   const [location, setLocation] = useLocation();
   
+  // Listen for custom routeChange events from our gh-pages redirect script
+  useEffect(() => {
+    const handleRouteChange = (e: CustomEvent) => {
+      if (e.detail && e.detail.path) {
+        console.log('Custom routeChange event received with path:', e.detail.path);
+        setLocation(e.detail.path);
+      }
+    };
+    
+    window.addEventListener('routeChange', handleRouteChange as EventListener);
+    return () => {
+      window.removeEventListener('routeChange', handleRouteChange as EventListener);
+    };
+  }, [setLocation]);
+  
   // Handle paths with base path for GitHub Pages
   useEffect(() => {
     // Initialize ENV object if it doesn't exist
@@ -55,12 +70,33 @@ const useBasePathRouter = () => {
       window.ENV = window.ENV || {};
     }
     
-    // If location starts with base path, we need to handle it
+    // If location starts with base path, we need to normalize it
     if (basePath && location.startsWith(basePath)) {
+      console.log('Normalizing path:', location, 'with basePath:', basePath);
       const normalizedPath = location.slice(basePath.length) || '/';
-      setLocation(normalizedPath);
+      
+      // Avoid redirect loops - only update if the path is actually changing
+      if (normalizedPath !== location) {
+        console.log('Updating location from', location, 'to', normalizedPath);
+        setLocation(normalizedPath);
+      }
     }
   }, [location, basePath, setLocation]);
+  
+  // Handle redirect from sessionStorage (set by 404.html)
+  useEffect(() => {
+    const storedPath = sessionStorage.getItem('redirectPath');
+    if (storedPath) {
+      console.log('Found stored redirect path:', storedPath);
+      sessionStorage.removeItem('redirectPath');
+      sessionStorage.removeItem('redirectCount');
+      
+      // Navigate to the stored path
+      if (storedPath !== location) {
+        setLocation(storedPath);
+      }
+    }
+  }, [location, setLocation]);
   
   return basePath;
 };
@@ -69,6 +105,7 @@ const useBasePathRouter = () => {
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, [x: string]: any }) {
   const { user, loading } = useAuth();
   const basePath = getBasePath();
+  const [location, navigate] = useLocation();
   
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -77,8 +114,15 @@ function ProtectedRoute({ component: Component, ...rest }: { component: React.Co
   }
   
   if (!user) {
-    // Redirect to login with base path
-    window.location.href = `${basePath}/login`;
+    // Use navigate instead of direct window.location for SPA routing
+    // This helps avoid redirect loops on GitHub Pages
+    console.log('User not authenticated, redirecting to login');
+    
+    // Use useEffect to navigate after render to avoid React state updates during render
+    useEffect(() => {
+      navigate('/login');
+    }, [navigate]);
+    
     return null;
   }
   
