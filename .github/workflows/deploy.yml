@@ -72,10 +72,10 @@ jobs:
           
       - name: Ensure all necessary static files exist
         run: |
-          mkdir -p ./dist
-          if [ ! -f ./dist/index.html ]; then
+          mkdir -p ./dist/public
+          if [ ! -f ./dist/public/index.html ]; then
             echo "Building index.html failed. Creating a minimal index.html to debug."
-            cat > ./dist/index.html << EOF
+            cat > ./dist/public/index.html << EOF
             <!DOCTYPE html>
             <html>
             <head>
@@ -96,17 +96,17 @@ jobs:
             EOF
           fi
           
-          if [ ! -f ./dist/404.html ]; then
+          if [ ! -f ./dist/public/404.html ]; then
             echo "Copying 404.html from client/public directory"
-            cp -f ./client/public/404.html ./dist/404.html || echo "Failed to copy 404.html"
+            cp -f ./client/public/404.html ./dist/public/404.html || echo "Failed to copy 404.html"
           fi
           
           echo "Creating .nojekyll file to prevent Jekyll processing"
-          touch ./dist/.nojekyll
+          touch ./dist/public/.nojekyll
 
           echo "Creating basic env-config.js file if not exists"
-          if [ ! -f ./dist/env-config.js ]; then
-            cat > ./dist/env-config.js << EOF
+          if [ ! -f ./dist/public/env-config.js ]; then
+            cat > ./dist/public/env-config.js << EOF
             // Runtime environment configuration
             window.ENV = window.ENV || {};
             window.ENV.BASE_PATH = "/$REPO_NAME";
@@ -117,12 +117,12 @@ jobs:
       - name: Verify build output
         run: |
           echo "Checking build output files and structure..."
-          ls -la ./dist
+          ls -la ./dist/public
           echo "Checking if key files exist..."
-          [ -f ./dist/index.html ] || (echo "index.html missing" && exit 1)
-          [ -f ./dist/404.html ] || (echo "404.html missing" && exit 1)
-          [ -f ./dist/env-config.js ] || (echo "env-config.js missing" && exit 1)
-          [ -f ./dist/.nojekyll ] || (echo ".nojekyll missing" && exit 1)
+          [ -f ./dist/public/index.html ] || (echo "index.html missing" && exit 1)
+          [ -f ./dist/public/404.html ] || (echo "404.html missing" && exit 1)
+          [ -f ./dist/public/env-config.js ] || (echo "env-config.js missing" && exit 1)
+          [ -f ./dist/public/.nojekyll ] || (echo ".nojekyll missing" && exit 1)
           echo "Build verification completed successfully"
           
       - name: Setup GitHub Pages
@@ -131,7 +131,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './dist/public'
           
   deploy:
     environment:

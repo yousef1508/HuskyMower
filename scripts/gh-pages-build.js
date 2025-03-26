@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Path to the dist directory
-const distDir = path.resolve(__dirname, '../dist');
+const distDir = path.resolve(__dirname, '../dist/public');
 
 // Environment configuration
 const envVars = {
@@ -192,28 +192,31 @@ async function main() {
     // Set production mode
     process.env.NODE_ENV = 'production';
     
-    // Ensure dist directory exists
-    if (!fs.existsSync(path.dirname(distDir))) {
-      fs.mkdirSync(path.dirname(distDir), { recursive: true });
-    }
-    
-    if (!fs.existsSync(distDir)) {
-      fs.mkdirSync(distDir, { recursive: true });
-    }
-    
     // Build the Vite frontend with the correct base path
     console.log('Building frontend with Vite...');
     // Set the base path for GitHub Pages (/{repo-name}/)
     execSync('npx vite build --base=/HuskyMower/', { stdio: 'inherit' });
     
-    // Make sure the dist directory exists
+    // Ensure the dist directory exists with expected structure
+    console.log('Checking dist directory structure...');
+    if (!fs.existsSync(path.dirname(distDir))) {
+      console.log('Creating parent directory for dist/public');
+      fs.mkdirSync(path.dirname(distDir), { recursive: true });
+    }
+    
     if (!fs.existsSync(distDir)) {
-      throw new Error('dist directory does not exist after build. Check the Vite build output for errors.');
+      console.log('Creating dist/public directory');
+      fs.mkdirSync(distDir, { recursive: true });
+    }
+    
+    // Make sure the dist/public directory exists
+    if (!fs.existsSync(distDir)) {
+      throw new Error('dist/public directory does not exist after build. Check the Vite build output for errors.');
     }
     
     // List files in dist directory to debug
-    console.log('Contents of dist directory:');
-    execSync('ls -la ./dist', { stdio: 'inherit' });
+    console.log('Contents of dist/public directory:');
+    execSync('ls -la ./dist/public', { stdio: 'inherit' });
     
     // Update index.html with runtime base path detection
     updateIndexHtml();
@@ -225,9 +228,9 @@ async function main() {
     copyStaticFiles();
     
     // Verify the final structure
-    console.log('Final contents of dist directory:');
-    execSync('ls -la ./dist', { stdio: 'inherit' });
-    execSync('cat ./dist/index.html | grep -n "base\\|script\\|link"', { stdio: 'inherit' });
+    console.log('Final contents of dist/public directory:');
+    execSync('ls -la ./dist/public', { stdio: 'inherit' });
+    execSync('cat ./dist/public/index.html | grep -n "base\\|script\\|link"', { stdio: 'inherit' });
     
     console.log('GitHub Pages build completed successfully!');
   } catch (error) {
