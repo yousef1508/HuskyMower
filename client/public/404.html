@@ -108,34 +108,46 @@
       
       console.log('Path after repo:', pathAfterRepo);
       
-      // Build the redirect URL
-      var redirectUrl = basePath;
+      // Build the redirect URL - always go to the index page
+      // This fixes the redirect loop issue by avoiding re-routing to the same page
+      var redirectUrl = basePath + '/';
+      
+      // Store the current path in sessionStorage to be picked up by the index page
       if (pathAfterRepo && pathAfterRepo !== '/') {
-        // Preserve the path after redirect
-        redirectUrl = basePath + (pathAfterRepo.startsWith('/') ? pathAfterRepo : '/' + pathAfterRepo);
+        sessionStorage.setItem('redirectPath', pathAfterRepo);
+        console.log('Stored redirect path in sessionStorage:', pathAfterRepo);
       }
       
-      // Add query parameters and hash if present
-      if (window.location.search) {
-        redirectUrl += window.location.search;
-      }
+      // Add hash if present (query params will be lost but that's okay for SPA)
       if (window.location.hash) {
-        redirectUrl += window.location.hash;
+        sessionStorage.setItem('redirectHash', window.location.hash);
+        console.log('Stored redirect hash in sessionStorage:', window.location.hash);
       }
       
-      console.log('Redirecting to:', redirectUrl);
+      console.log('Redirecting to index:', redirectUrl);
       console.groupEnd();
       
       // Update the link in the page for manual navigation
       var manualLink = document.getElementById('manual-link');
       if (manualLink) {
-        manualLink.href = redirectUrl || basePath || '/';
+        manualLink.href = redirectUrl;
       }
       
-      // Redirect to the index page with the correct path
+      // Check if we're already in a redirect loop
+      var redirectCount = parseInt(sessionStorage.getItem('redirectCount') || '0');
+      if (redirectCount > 3) {
+        console.error('Detected redirect loop! Stopping and going to home page.');
+        window.location.href = basePath + '/';
+        return;
+      }
+      
+      // Increment redirect count
+      sessionStorage.setItem('redirectCount', (redirectCount + 1).toString());
+      
+      // Redirect to the index page
       setTimeout(function() {
-        window.location.href = redirectUrl || basePath || '/';
-      }, 1000); // Small delay to show the loading animation
+        window.location.replace(redirectUrl);
+      }, 500); // Small delay to show the loading animation
     });
   </script>
 </head>
