@@ -75,27 +75,33 @@ jobs:
           mkdir -p ./dist/public
           if [ ! -f ./dist/public/index.html ]; then
             echo "Building index.html failed. Creating a minimal index.html to debug."
-            cat > ./dist/public/index.html << 'INDEXEOF'
+            cat > ./dist/public/index.html << EOF
 <!DOCTYPE html>
+
+Check failure on line 79 in .github/workflows/deploy.yml
+GitHub Actions / .github/workflows/deploy.yml
+
+Invalid workflow file
+
+You have an error in your yaml syntax on line 79
+
 <html>
 <head>
   <meta charset="utf-8">
   <title>HuskyMower - Emergency Index</title>
-  <base href="/HuskyMower/">
+  <base href="/${REPO_NAME}/">
   <script>
     console.log('This is an emergency index.html created by the GitHub Actions workflow');
-    window.location.href = "/HuskyMower/";
+    window.location.href = "/${REPO_NAME}/";
   </script>
 </head>
 <body>
   <h1>HuskyMower</h1>
   <p>The build process failed to create index.html. Please check the GitHub Actions logs.</p>
-  <p><a href="/HuskyMower/">Go to home page</a></p>
+  <p><a href="/${REPO_NAME}/">Go to home page</a></p>
 </body>
 </html>
-INDEXEOF
-            # Update repository name in the emergency index.html
-            sed -i "s|/HuskyMower/|/${REPO_NAME}/|g" ./dist/public/index.html
+EOF
           fi
           
           if [ ! -f ./dist/public/404.html ]; then
@@ -108,14 +114,12 @@ INDEXEOF
 
           echo "Creating basic env-config.js file if not exists"
           if [ ! -f ./dist/public/env-config.js ]; then
-            cat > ./dist/public/env-config.js << 'ENVEOF'
+            cat > ./dist/public/env-config.js << EOF
 // Runtime environment configuration
 window.ENV = window.ENV || {};
-window.ENV.BASE_PATH = "/HuskyMower";
+window.ENV.BASE_PATH = "/${REPO_NAME}";
 console.log('Runtime environment configuration loaded from emergency file');
-ENVEOF
-            # Update repository name in the env-config.js
-            sed -i "s|/HuskyMower|/${REPO_NAME}|g" ./dist/public/env-config.js
+EOF
           fi
           
       - name: Verify build output
