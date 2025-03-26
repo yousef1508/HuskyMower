@@ -230,7 +230,25 @@ async function main() {
     // Verify the final structure
     console.log('Final contents of dist/public directory:');
     execSync('ls -la ./dist/public', { stdio: 'inherit' });
-    execSync('cat ./dist/public/index.html | grep -n "base\\|script\\|link"', { stdio: 'inherit' });
+    
+    // Check for the index.html file
+    if (fs.existsSync(path.join(distDir, 'index.html'))) {
+      console.log('Checking index.html content:');
+      execSync('cat ./dist/public/index.html | grep -n "base\\|script\\|link"', { stdio: 'inherit' });
+    } else {
+      console.error('WARNING: index.html not found in dist/public directory!');
+    }
+    
+    // Ensure the files needed for GitHub Pages are present
+    console.log('Checking for essential GitHub Pages files:');
+    const essentialFiles = ['.nojekyll', '404.html', 'env-config.js'];
+    essentialFiles.forEach(file => {
+      if (fs.existsSync(path.join(distDir, file))) {
+        console.log(`✅ ${file} exists`);
+      } else {
+        console.error(`❌ ${file} is missing!`);
+      }
+    });
     
     console.log('GitHub Pages build completed successfully!');
   } catch (error) {

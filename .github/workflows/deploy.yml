@@ -76,24 +76,24 @@ jobs:
           if [ ! -f ./dist/public/index.html ]; then
             echo "Building index.html failed. Creating a minimal index.html to debug."
             cat > ./dist/public/index.html << EOF
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <title>HuskyMower - Emergency Index</title>
-              <base href="/$REPO_NAME/">
-              <script>
-                console.log('This is an emergency index.html created by the GitHub Actions workflow');
-                window.location.href = "/$REPO_NAME/";
-              </script>
-            </head>
-            <body>
-              <h1>HuskyMower</h1>
-              <p>The build process failed to create index.html. Please check the GitHub Actions logs.</p>
-              <p><a href="/$REPO_NAME/">Go to home page</a></p>
-            </body>
-            </html>
-            EOF
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HuskyMower - Emergency Index</title>
+  <base href="/${REPO_NAME}/">
+  <script>
+    console.log('This is an emergency index.html created by the GitHub Actions workflow');
+    window.location.href = "/${REPO_NAME}/";
+  </script>
+</head>
+<body>
+  <h1>HuskyMower</h1>
+  <p>The build process failed to create index.html. Please check the GitHub Actions logs.</p>
+  <p><a href="/${REPO_NAME}/">Go to home page</a></p>
+</body>
+</html>
+EOF
           fi
           
           if [ ! -f ./dist/public/404.html ]; then
@@ -107,11 +107,11 @@ jobs:
           echo "Creating basic env-config.js file if not exists"
           if [ ! -f ./dist/public/env-config.js ]; then
             cat > ./dist/public/env-config.js << EOF
-            // Runtime environment configuration
-            window.ENV = window.ENV || {};
-            window.ENV.BASE_PATH = "/$REPO_NAME";
-            console.log('Runtime environment configuration loaded from emergency file');
-            EOF
+// Runtime environment configuration
+window.ENV = window.ENV || {};
+window.ENV.BASE_PATH = "/${REPO_NAME}";
+console.log('Runtime environment configuration loaded from emergency file');
+EOF
           fi
           
       - name: Verify build output
