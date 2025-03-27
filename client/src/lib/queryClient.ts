@@ -78,14 +78,33 @@ async function throwIfResNotOk(res: Response) {
 
 // Helper to ensure endpoint has proper base URL in production
 function getFullEndpoint(endpoint: string): string {
-  // If endpoint already starts with http:// or https://, return as is
+  // If endpoint already starts with http:// or https://, we need to check
+  // if it's using the wrong backend URL and fix it
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    // CRITICAL FIX: Check for and fix incorrect backend URL
+    if (endpoint.includes('husky-mower-backend.replit.app')) {
+      const fixedEndpoint = endpoint.replace(
+        'husky-mower-backend.replit.app', 
+        'husky-mower.replit.app'
+      );
+      console.warn('FIXED INCORRECT API URL:', endpoint, '→', fixedEndpoint);
+      return fixedEndpoint;
+    }
     return endpoint;
   }
   
-  // If endpoint starts with /api/, prepend the base URL when in production
+  // If endpoint starts with /api/, we need to determine the base URL
   if (endpoint.startsWith('/api/')) {
-    // First try to get from explicit environment variable
+    // First check for direct explicit override from api-fix.js (highest priority)
+    // This is set by our special api-fix.js script for GitHub Pages
+    if (typeof window !== 'undefined' && window.ENV && window.ENV.API_BASE_URL_OVERRIDE) {
+      const baseUrl = window.ENV.API_BASE_URL_OVERRIDE;
+      const fullUrl = `${baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl}${endpoint}`;
+      console.log(`Using API URL OVERRIDE: ${fullUrl}`);
+      return fullUrl;
+    }
+    
+    // Next try environment variables
     let apiBaseUrl = API_BASE_URL;
     
     // If not set, check if we're in GitHub Pages and use the hardcoded value
@@ -99,9 +118,15 @@ function getFullEndpoint(endpoint: string): string {
       
       if (isGitHubPages) {
         // CRITICAL FIX: Always use the correct Replit URL for GitHub Pages deployment
-        // The logs showed 'husky-mower-backend.replit.app' which is incorrect
         // Force the correct URL to ensure this works in production
         apiBaseUrl = 'https://husky-mower.replit.app';
+        
+        // Also store this in the ENV for future requests
+        if (typeof window !== 'undefined' && window.ENV) {
+          window.ENV.API_BASE_URL = apiBaseUrl;
+          window.ENV.VITE_API_BASE_URL = apiBaseUrl;
+          window.ENV.API_BASE_URL_OVERRIDE = apiBaseUrl;
+        }
         
         console.log('GitHub Pages deployment detected, FORCING correct API URL:', apiBaseUrl);
         
@@ -125,6 +150,17 @@ function getFullEndpoint(endpoint: string): string {
     
     // Log the full URL for debugging
     const fullUrl = `${cleanBaseUrl}${endpoint}`;
+    
+    // Final sanity check - ensure we're using the correct domain
+    if (fullUrl.includes('husky-mower-backend.replit.app')) {
+      const correctedUrl = fullUrl.replace(
+        'husky-mower-backend.replit.app', 
+        'husky-mower.replit.app'
+      );
+      console.warn('CRITICAL: Incorrect backend URL detected and fixed! Using:', correctedUrl);
+      return correctedUrl;
+    }
+    
     console.log(`API request to: ${fullUrl}`);
     return fullUrl;
   }

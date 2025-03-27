@@ -83,20 +83,21 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
     console.log(`Auth check - Session: ${!!req.session}, UserId: ${req.session?.userId}, Origin: ${origin || 'none'}`);
   }
   
+  // Special case: Allow /api/ping endpoint for connectivity testing without authentication
+  // This is critical for GitHub Pages to test connection to the backend
+  if (req.path === '/api/ping') {
+    console.log('Allowing /api/ping request without authentication');
+    return next();
+  }
+  
   // First check the session for authentication
   if (req.session && req.session.userId) {
     return next();
   }
   
-  // Special case: GitHub Pages ping request for connectivity testing
-  // Allow GitHub Pages app to ping the server without authentication
-  if (isGitHubDeployment && req.path === '/api/ping') {
-    return next();
-  }
-
-  // For GitHub Pages deployment, add special debugging info in the response
-  if (isGitHubPagesRequest) {
-    // Include headers in error response for debugging
+  // For GitHub Pages deployment, add detailed error information
+  if (isGitHubPagesRequest || isGitHubDeployment) {
+    // Include detailed headers in error response for debugging
     const debugInfo = {
       sessionStatus: !!req.session,
       sessionId: req.session?.id,
@@ -106,19 +107,22 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
       host: req.headers.host,
       isGitHubDeployment,
       path: req.path,
-      method: req.method
+      method: req.method,
+      timestamp: new Date().toISOString()
     };
     
+    console.log('GitHub Pages auth failed:', JSON.stringify(debugInfo));
+    
     return res.status(401).json({ 
-      message: "Unauthorized - Cross-Origin Session Issue", 
-      detail: "Your session may not be properly maintained across domains.",
-      debug: debugInfo,
-      timestamp: new Date().toISOString()
+      message: "Unauthorized - No token provided",
+      detail: "Your session could not be validated. This may be due to CORS restrictions or missing cookies.",
+      cors_status: "Cross-Origin request detected from " + origin,
+      debug: debugInfo
     });
   }
   
   // Standard unauthorized response
-  res.status(401).json({ message: "Unauthorized" });
+  res.status(401).json({ message: "Unauthorized - No token provided" });
 }
 
 // Middleware to check if user is admin

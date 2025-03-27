@@ -36,6 +36,10 @@ function updateIndexHtml() {
   
   let content = fs.readFileSync(indexPath, 'utf8');
   
+  // CRITICAL FIX: Add the API fix script as the FIRST script to execute
+  // This ensures the API URL is set correctly before any other code runs
+  const apiFixScript = `<script src="api-fix.js"></script>`;
+  
   // Add script to detect the base path at runtime and ensure proper asset paths
   const runtimeScript = `
     <script>
@@ -83,16 +87,19 @@ function updateIndexHtml() {
     </script>
   `;
   
-  // Insert the script right after the opening head tag
-  content = content.replace('<head>', '<head>' + runtimeScript);
+  // First add the API fix script at the very beginning of head
+  content = content.replace('<head>', '<head>' + apiFixScript);
+  
+  // Then insert the runtime script after the API fix script
+  content = content.replace('<head>' + apiFixScript, '<head>' + apiFixScript + runtimeScript);
   
   // Add a specific base tag for GitHub Pages to ensure proper asset loading
   const baseTag = '<base href="/HuskyMower/">';
-  content = content.replace('<head>', '<head>' + baseTag);
+  content = content.replace('<head>' + apiFixScript + runtimeScript, '<head>' + apiFixScript + runtimeScript + baseTag);
   
   // Write the updated content back to index.html
   fs.writeFileSync(indexPath, content);
-  console.log('index.html updated successfully');
+  console.log('✓ index.html updated successfully with critical API fix script!');
 }
 
 /**
@@ -160,6 +167,13 @@ function copyStaticFiles() {
     path.resolve(__dirname, '../client/public/gh-pages-redirect.js'),
     path.resolve(distDir, 'gh-pages-redirect.js')
   );
+  
+  // Copy API URL fix script - CRITICAL FIX
+  fs.copyFileSync(
+    path.resolve(__dirname, '../client/public/api-fix.js'),
+    path.resolve(distDir, 'api-fix.js')
+  );
+  console.log('✓ Copied API fix script!');
   
   // Create .nojekyll file to prevent GitHub Pages from ignoring files that begin with an underscore
   fs.writeFileSync(path.resolve(distDir, '.nojekyll'), '');

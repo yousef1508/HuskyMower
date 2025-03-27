@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(204).end();
   });
 
-  // Simple API health check endpoint that doesn't require authentication
+  // Special API health check endpoint that doesn't require authentication
   // Use this to test connectivity from GitHub Pages
   app.get("/api/ping", (req: Request, res: Response) => {
     const origin = req.headers.origin || 'unknown';
@@ -39,25 +39,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     console.log(`Received ping from ${origin}${githubDeployment ? ' (GitHub Pages deployment)' : ''}`);
     
-    // Add custom headers for GitHub Pages requests
-    if (origin && (origin.includes('github.io') || origin.includes('gjersjoengolfclub.com'))) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
+    // Always allow cross-origin access to the ping endpoint
+    // This is critical for GitHub Pages connectivity testing
+    if (origin && origin !== 'unknown') {
+      // For explicit cross-origin requests, set the proper CORS headers
+      res.setHeader('Access-Control-Allow-Origin', origin); 
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-GitHub-Deployment, Origin');
-      res.setHeader('X-Special-CORS-Headers', 'added');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-GitHub-Deployment, X-Deployment-Type, Origin');
+      res.setHeader('X-CORS-Enabled-For', origin);
+    }
+    
+    // Include comprehensive debug information in the response
+    // Use a safe type that matches the structure of req.headers
+    interface HeadersObject {
+      [key: string]: string | string[] | undefined;
+    }
+    const headers: HeadersObject = {};
+    
+    // Extract header keys for debugging, but exclude potential sensitive info
+    for (const key in req.headers) {
+      if (key !== 'cookie' && key !== 'authorization') {
+        // TypeScript now knows we can safely index headers with string keys
+        headers[key] = req.headers[key];
+      }
     }
     
     res.json({ 
       status: "online",
       timestamp: new Date().toISOString(),
       origin,
-      message: "HuskyMower API is running",
+      message: "HuskyMower API is running and correctly configured!",
       environment: process.env.NODE_ENV || 'development',
-      cors_enabled: true,
-      github_deployment: githubDeployment,
-      api_version: "1.0.4",
-      server: "husky-mower.replit.app"
+      cors_settings: {
+        enabled: true,
+        headers_set: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials', 'Access-Control-Allow-Methods']
+      },
+      debug_info: {
+        req_headers: headers,
+        github_deployment: githubDeployment,
+        client_ip: req.ip || 'unknown',
+        is_github_pages: origin.includes('github.io') || origin.includes('gjersjoengolfclub.com'),
+        is_secure: req.protocol === 'https'
+      },
+      api_meta: {
+        version: "1.0.5",
+        server: "husky-mower.replit.app",
+        session_enabled: true,
+        session_format: "express-session + PostgreSQL",
+        maintenance_mode: false
+      }
     });
   });
 

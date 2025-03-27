@@ -1,0 +1,21 @@
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/automower/mowers. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/weather. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/automower/mowers. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/automower/mowers: TypeError: NetworkError when attempting to fetch resource. index-Bt0oSxjU.js:53:602
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/weather. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/weather: TypeError: NetworkError when attempting to fetch resource. index-Bt0oSxjU.js:53:602
+Automowers data: undefined index-Bt0oSxjU.js:1778:115201
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/notes/recent. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/mowers. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/notes/recent. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/notes/recent: TypeError: NetworkError when attempting to fetch resource. index-Bt0oSxjU.js:53:602
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/mowers. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/mowers: TypeError: NetworkError when attempting to fetch resource.

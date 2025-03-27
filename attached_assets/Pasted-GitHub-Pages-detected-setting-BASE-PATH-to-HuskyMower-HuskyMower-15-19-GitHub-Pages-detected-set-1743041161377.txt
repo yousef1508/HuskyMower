@@ -1,0 +1,72 @@
+GitHub Pages detected, setting BASE_PATH to: /HuskyMower HuskyMower:15:19
+GitHub Pages detected, setting BASE_PATH to: /HuskyMower HuskyMower:119:15
+Loading runtime environment configuration from env-config.js HuskyMower:149:15
+Runtime environment configuration loaded: 
+Object { FIREBASE_PROJECT_ID: "gjersjoengolfclub", API_BASE_URL: "https://husky-mower-backend.replit.app", FIREBASE_API_KEY_SET: true, FIREBASE_APP_ID_SET: true }
+env-config.js:18:9
+Runtime environment configuration loaded: 
+Object { FIREBASE_PROJECT_ID: "gjersjoengolfclub", API_BASE_URL: "https://husky-mower-backend.replit.app", FIREBASE_API_KEY_SET: true, FIREBASE_APP_ID_SET: true }
+env-config.js:18:9
+Found GitHub Pages env var for API_BASE_URL index-CRmPeKIp.js:48:43262
+API Base URL: https://husky-mower-backend.replit.app index-CRmPeKIp.js:48:43748
+Found GitHub Pages env var for VITE_FIREBASE_API_KEY (as FIREBASE_API_KEY) index-CRmPeKIp.js:1778:1864
+Found GitHub Pages env var for VITE_FIREBASE_PROJECT_ID (as FIREBASE_PROJECT_ID) 3 index-CRmPeKIp.js:1778:1864
+Found GitHub Pages env var for VITE_FIREBASE_APP_ID (as FIREBASE_APP_ID) index-CRmPeKIp.js:1778:1864
+Firebase configuration: 
+Object { projectId: "gjersjoengolfclub", authDomain: "gjersjoengolfclub.firebaseapp.com", apiKeyProvided: true, appIdProvided: true }
+index-CRmPeKIp.js:1778:2721
+Firebase configuration appears complete, initializing... index-CRmPeKIp.js:1778:3307
+Firebase successfully initialized index-CRmPeKIp.js:1778:3462
+Normalizing path: /HuskyMower/ with basePath: /HuskyMower index-CRmPeKIp.js:1830:174775
+Updating location from /HuskyMower/ to / index-CRmPeKIp.js:1830:174868
+Router mounted - Auth state: 
+Object { user: "not logged in", loading: true, currentPath: "/", currentLocation: "https://yousef1508.github.io/" }
+index-CRmPeKIp.js:1830:175635
+Checking API connectivity to: https://husky-mower-backend.replit.app/api/ping index-CRmPeKIp.js:1830:176683
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/ping. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+2
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/ping. (Reason: CORS request did not succeed). Status code: (null).
+2
+API connectivity check failed: TypeError: NetworkError when attempting to fetch resource. index-CRmPeKIp.js:1830:177032
+Automowers data: undefined index-CRmPeKIp.js:1778:115201
+API request to: https://husky-mower-backend.replit.app/api/automower/mowers index-CRmPeKIp.js:48:45147
+API request to: https://husky-mower-backend.replit.app/api/weather index-CRmPeKIp.js:48:45147
+API request to: https://husky-mower-backend.replit.app/api/notes/recent index-CRmPeKIp.js:48:45147
+API request to: https://husky-mower-backend.replit.app/api/mowers index-CRmPeKIp.js:48:45147
+Router mounted - Auth state: 
+Object { user: "logged in", loading: false, currentPath: "/", currentLocation: "https://yousef1508.github.io/" }
+index-CRmPeKIp.js:1830:175635
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/weather. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/weather. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/weather: TypeError: NetworkError when attempting to fetch resource. index-CRmPeKIp.js:53:602
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/automower/mowers. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/automower/mowers. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/automower/mowers: TypeError: NetworkError when attempting to fetch resource. index-CRmPeKIp.js:53:602
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/notes/recent. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/notes/recent. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/notes/recent: TypeError: NetworkError when attempting to fetch resource. index-CRmPeKIp.js:53:602
+Automowers data: undefined index-CRmPeKIp.js:1778:115201
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/mowers. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/mowers. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/mowers: TypeError: NetworkError when attempting to fetch resource. index-CRmPeKIp.js:53:602
+Automowers data: undefined index-CRmPeKIp.js:1778:115201
+API request to: https://husky-mower-backend.replit.app/api/automower/mowers index-CRmPeKIp.js:48:45147
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/automower/mowers. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/automower/mowers. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/automower/mowers: TypeError: NetworkError when attempting to fetch resource. index-CRmPeKIp.js:53:602
+API request to: https://husky-mower-backend.replit.app/api/weather index-CRmPeKIp.js:48:45147
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/weather. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 404.
+
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://husky-mower-backend.replit.app/api/weather. (Reason: CORS request did not succeed). Status code: (null).
+
+Query failed for https://husky-mower-backend.replit.app/api/weather: TypeError: NetworkError when attempting to fetch resourc
