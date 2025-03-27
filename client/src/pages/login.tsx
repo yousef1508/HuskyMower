@@ -45,10 +45,19 @@ export default function Login() {
       
       // Provide user-friendly error messages based on Firebase error codes
       let errorMessage = "Could not sign in. Please check your credentials and try again.";
+      
       if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
         errorMessage = "Invalid email or password. Please try again.";
       } else if (error.code === "auth/too-many-requests") {
         errorMessage = "Too many failed login attempts. Please try again later.";
+      } else if (error.code === "auth/invalid-api-key") {
+        errorMessage = "Authentication configuration error. Please contact support.";
+        console.error("Firebase API key is missing or invalid. Check environment variables or GitHub secrets.");
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your internet connection and try again.";
+      } else {
+        // Log the actual error code for debugging
+        console.error(`Firebase error code: ${error.code}`);
       }
       
       toast({

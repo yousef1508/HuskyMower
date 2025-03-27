@@ -39,8 +39,15 @@ function getFullEndpoint(endpoint: string): string {
   }
   
   // If endpoint starts with /api/, prepend the base URL when in production
-  if (endpoint.startsWith('/api/') && API_BASE_URL) {
-    return `${API_BASE_URL}${endpoint}`;
+  if (endpoint.startsWith('/api/')) {
+    // Make sure we have a value for API_BASE_URL
+    const apiBaseUrl = API_BASE_URL || 'https://husky-mower.replit.app';
+    
+    // Remove any trailing slash from base URL
+    const cleanBaseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+    
+    console.log(`API request to: ${cleanBaseUrl}${endpoint}`);
+    return `${cleanBaseUrl}${endpoint}`;
   }
   
   return endpoint;

@@ -8,7 +8,9 @@ const app = express();
 // Configure CORS for GitHub Pages and other clients
 app.use(cors({
   origin: [
-    // Allow GitHub Pages domain
+    // Allow your specific GitHub Pages domain
+    "https://yousef1508.github.io",
+    // Allow any GitHub Pages subdomain (as a fallback)
     /^https:\/\/[a-zA-Z0-9\-]+\.github\.io$/,
     // Allow development domain
     "http://localhost:5000",
@@ -16,7 +18,8 @@ app.use(cors({
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "X-HTTP-Method-Override", "Accept"],
+  exposedHeaders: ["X-Total-Count", "Content-Length", "Date"],
 }));
 
 app.use(express.json());
