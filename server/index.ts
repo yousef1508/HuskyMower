@@ -12,6 +12,7 @@ app.use((req, res, next) => {
 });
 
 // Configure CORS with specific settings for GitHub Pages access
+// IMPORTANT: We must use the exact origin in Access-Control-Allow-Origin for GitHub Pages
 app.use(cors({
   // Allow requests from specified origins
   origin: function(origin, callback) {
@@ -34,19 +35,19 @@ app.use(cors({
       'https://yousef1508.github.io',
       'http://yousef1508.github.io',
       'https://gjersjoengolfclub.com',
-      'http://gjersjoengolfclub.com',
-      'https://github.io'
+      'http://gjersjoengolfclub.com'
     ];
     
-    // Allow any github.io domain or specifically allowed domains
-    if (allowedDomains.some(domain => origin.includes(domain)) || 
-        origin.includes('github.io')) {
-      console.log(`CORS: Allowing request from GitHub Pages origin: ${origin}`);
-      callback(null, true);
-    } else {
-      // In production, we'll still allow all origins but log them for monitoring
-      console.warn(`⚠️ CORS policy: Unexpected origin ${origin}, allowing but monitoring`);
-      callback(null, true);
+    // Always allow GitHub Pages domains with exact origin 
+    // The key fix: return the specific origin, not just "true"
+    if (origin && (origin.includes('github.io') || origin.includes('gjersjoengolfclub.com'))) {
+      console.log(`CORS: Explicitly allowing GitHub Pages origin: ${origin}`);
+      callback(null, origin); // Return the actual origin to set in Access-Control-Allow-Origin
+    } 
+    // For other domains, we'll still allow but log them for monitoring
+    else {
+      console.log(`CORS: Allowing origin: ${origin}`);
+      callback(null, origin || true);
     }
   },
   // Important for authentication cookies - must be true for credentials: 'include' to work

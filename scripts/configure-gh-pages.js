@@ -75,9 +75,9 @@ function updateIndexHtml() {
 function createEnvConfig() {
   console.log('Creating runtime environment configuration...');
   
-  // IMPORTANT: The backend API URL must match your actual Replit URL
-  // The error in the logs shows it's trying to access husky-mower-backend.replit.app
-  // But based on your setup, it should be husky-mower.replit.app
+  // CRITICAL FIX: The backend API URL *must* match your actual Replit URL
+  // Current error: API URL in GitHub Pages deployment is "husky-mower-backend.replit.app"
+  // Corrected to: "husky-mower.replit.app" to match the actual backend deployment
   
   const envVars = {
     VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY || '',
@@ -85,8 +85,8 @@ function createEnvConfig() {
     VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID || '',
     AUTOMOWER_API_KEY: process.env.AUTOMOWER_API_KEY || '',
     AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || '',
-    // Corrected API URL - this is the correct domain for the backend
-    VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || 'https://husky-mower.replit.app',
+    // Override any configured value with the correct API URL to fix GitHub Pages deployment
+    VITE_API_BASE_URL: 'https://husky-mower.replit.app',
     
     // Add flags to indicate when secrets are available but not expose values
     FIREBASE_API_KEY_SET: !!process.env.VITE_FIREBASE_API_KEY,
@@ -129,7 +129,15 @@ window.ENV.DEPLOYMENT_TARGET = "github-pages";
   } 
   // For GitHub Pages deployment
   else if (window.location.hostname.includes('github.io')) {
-    console.log('GitHub Pages deployment detected, using API URL:', window.ENV.API_BASE_URL);
+    // CRITICAL FIX: Force correct API URL for GitHub Pages deployment
+    // Current issue shows it's using "husky-mower-backend.replit.app" which doesn't exist
+    window.ENV.API_BASE_URL = "https://husky-mower.replit.app";
+    window.ENV.VITE_API_BASE_URL = "https://husky-mower.replit.app";
+    
+    console.log('GitHub Pages deployment detected, setting API URL:', window.ENV.API_BASE_URL);
+    console.log('DEBUG - Page load for GitHub Pages: ' + window.location.hostname + 
+                ' path: ' + window.location.pathname +
+                ' origin: ' + window.location.origin);
   }
   // For local development
   else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {

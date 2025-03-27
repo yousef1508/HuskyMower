@@ -98,13 +98,21 @@ function getFullEndpoint(endpoint: string): string {
       );
       
       if (isGitHubPages) {
+        // CRITICAL FIX: Always use the correct Replit URL for GitHub Pages deployment
+        // The logs showed 'husky-mower-backend.replit.app' which is incorrect
+        // Force the correct URL to ensure this works in production
         apiBaseUrl = 'https://husky-mower.replit.app';
-        console.log('Detected GitHub Pages or custom domain deployment, using Replit backend URL:', apiBaseUrl);
-        // Allow window.ENV to override the hardcoded URL (for easier testing)
-        if (window.ENV && window.ENV.API_BASE_URL) {
-          apiBaseUrl = window.ENV.API_BASE_URL;
-          console.log('Overriding Replit backend URL from window.ENV:', apiBaseUrl);
-        }
+        
+        console.log('GitHub Pages deployment detected, FORCING correct API URL:', apiBaseUrl);
+        
+        // Add debugging information to help troubleshoot GitHub Pages issues
+        console.log('GitHub Pages debug info:', {
+          hostname: window.location.hostname,
+          origin: window.location.origin,
+          envApiUrl: window.ENV?.API_BASE_URL || 'not set',
+          correctedApiUrl: apiBaseUrl,
+          endpoint
+        });
       } else {
         // For local development, we'll use relative URLs
         console.log('Using relative URL for API request');

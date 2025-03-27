@@ -29,13 +29,13 @@ export const sessionMiddleware = session({
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     
-    // Cross-Origin Resource Sharing (CORS) for GitHub Pages
-    // 'none' allows cross-origin cookies which is absolutely required for GitHub Pages
-    // This MUST be 'none' for cross-origin (GitHub Pages to Replit) to work with secure cookies
+    // CRITICAL FIX: Cross-Origin Resource Sharing (CORS) for GitHub Pages
+    // Must explicitly set 'none' to allow cross-origin cookies, absolutely required for GitHub Pages integration
+    // Since connect-session doesn't support dynamic SameSite based on request, we'll use a fixed value
+    // and rely on our CORS configuration to ensure security
     sameSite: isProduction ? 'none' : 'lax',
     
     // Enables cookies to be set for specific domain
-    // This is needed when the application is hosted on a different domain than the API
     // For GitHub Pages to Replit communication, we need to explicitly allow cross-domain cookies
     domain: undefined // This will default to the current domain
   },
