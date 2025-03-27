@@ -13,6 +13,54 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Handle preflight OPTIONS requests for CORS (needed for GitHub Pages)
+  app.options("/api/ping", (req: Request, res: Response) => {
+    const origin = req.headers.origin || '';
+    
+    // Always allow GitHub Pages or our custom domain
+    if (origin && (origin.includes('github.io') || origin.includes('gjersjoengolfclub.com'))) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-GitHub-Deployment, Origin');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+      console.log(`Responding to CORS preflight from ${origin}`);
+    }
+    
+    // End preflight request
+    res.status(204).end();
+  });
+
+  // Simple API health check endpoint that doesn't require authentication
+  // Use this to test connectivity from GitHub Pages
+  app.get("/api/ping", (req: Request, res: Response) => {
+    const origin = req.headers.origin || 'unknown';
+    const githubDeployment = req.headers['x-github-deployment'] === 'true';
+    
+    console.log(`Received ping from ${origin}${githubDeployment ? ' (GitHub Pages deployment)' : ''}`);
+    
+    // Add custom headers for GitHub Pages requests
+    if (origin && (origin.includes('github.io') || origin.includes('gjersjoengolfclub.com'))) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-GitHub-Deployment, Origin');
+      res.setHeader('X-Special-CORS-Headers', 'added');
+    }
+    
+    res.json({ 
+      status: "online",
+      timestamp: new Date().toISOString(),
+      origin,
+      message: "HuskyMower API is running",
+      environment: process.env.NODE_ENV || 'development',
+      cors_enabled: true,
+      github_deployment: githubDeployment,
+      api_version: "1.0.4",
+      server: "husky-mower.replit.app"
+    });
+  });
+
   // Set up session middleware
   app.use(sessionMiddleware);
   

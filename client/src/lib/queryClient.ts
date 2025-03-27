@@ -3,26 +3,46 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 // Helper function to get environment variables that works both in development and production
 const getEnv = (key: string, defaultValue = ''): string => {
   // For GitHub Pages deployment, we use window.ENV which is set in env-config.js
-  // This is loaded at runtime rather than build time
-  // @ts-ignore - window.ENV is set at runtime in GitHub Pages
-  if (typeof window !== 'undefined' && window.ENV && window.ENV[key]) {
+  if (typeof window !== 'undefined' && window.ENV) {
+    // First try with the exact key
+    // @ts-ignore - window.ENV is set at runtime in GitHub Pages
+    if (window.ENV[key]) {
+      console.log(`Found GitHub Pages env var for ${key}`);
+      // @ts-ignore
+      return window.ENV[key];
+    }
+    
+    // Also try with alternative key format (with/without VITE_ prefix)
+    const altKey = key.startsWith('VITE_') ? key.substring(5) : `VITE_${key}`;
     // @ts-ignore
-    return window.ENV[key];
+    if (window.ENV[altKey]) {
+      console.log(`Found GitHub Pages env var for ${key} as ${altKey}`);
+      // @ts-ignore
+      return window.ENV[altKey];
+    }
   }
   
   // For development and regular builds, use import.meta.env
   // @ts-ignore
   if (import.meta && import.meta.env && import.meta.env[key]) {
+    console.log(`Found Vite env var for ${key}`);
     // @ts-ignore
     return import.meta.env[key];
+  }
+  
+  if (key.includes('API_BASE_URL') || key.includes('FIREBASE')) {
+    console.log(`Environment variable ${key} not found, using default: "${defaultValue}"`);
   }
   
   return defaultValue;
 };
 
-// API base URL - will be used in GitHub Pages deployment
-// Local development will use relative URLs
-const API_BASE_URL = getEnv('VITE_API_BASE_URL', '');
+// API base URL for backend requests - this is crucial for GitHub Pages to work
+// The correct URL should be 'https://husky-mower.replit.app' not 'husky-mower-backend.replit.app'
+const API_BASE_URL = getEnv('API_BASE_URL', '') || getEnv('VITE_API_BASE_URL', '');
+
+// Log the API base URL for debugging
+console.log('API Base URL:', API_BASE_URL || 'Using relative URLs (development mode)');
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -70,14 +90,21 @@ function getFullEndpoint(endpoint: string): string {
     
     // If not set, check if we're in GitHub Pages and use the hardcoded value
     if (!apiBaseUrl) {
-      // Check if we're running on GitHub Pages by looking at the hostname
-      const isGitHubPages = typeof window !== 'undefined' && 
-        (window.location.hostname.includes('github.io') || 
-         window.location.hostname.includes('yousef1508.github.io'));
+      // Check if we're running on GitHub Pages or custom domain by looking at the hostname
+      const isGitHubPages = typeof window !== 'undefined' && (
+        window.location.hostname.includes('github.io') || 
+        window.location.hostname.includes('gjersjoengolfclub.com') ||
+        window.location.hostname.includes('yousef1508.github.io')
+      );
       
       if (isGitHubPages) {
         apiBaseUrl = 'https://husky-mower.replit.app';
-        console.log('Detected GitHub Pages deployment, using Replit backend URL:', apiBaseUrl);
+        console.log('Detected GitHub Pages or custom domain deployment, using Replit backend URL:', apiBaseUrl);
+        // Allow window.ENV to override the hardcoded URL (for easier testing)
+        if (window.ENV && window.ENV.API_BASE_URL) {
+          apiBaseUrl = window.ENV.API_BASE_URL;
+          console.log('Overriding Replit backend URL from window.ENV:', apiBaseUrl);
+        }
       } else {
         // For local development, we'll use relative URLs
         console.log('Using relative URL for API request');
@@ -105,20 +132,23 @@ export async function apiRequest(
   
   try {
     // Add origin header for CORS requests on GitHub Pages
-    const isGitHubPages = typeof window !== 'undefined' && 
-      (window.location.hostname.includes('github.io') || 
-       window.location.hostname.includes('yousef1508.github.io'));
+    const isGitHubPages = typeof window !== 'undefined' && (
+      window.location.hostname.includes('github.io') || 
+      window.location.hostname.includes('gjersjoengolfclub.com') ||
+      window.location.hostname.includes('yousef1508.github.io')
+    );
        
     // Create headers object
     const headersObj: Record<string, string> = {
       "Content-Type": "application/json"
     };
     
-    // Only add special headers when on GitHub Pages
+    // Only add special headers when on GitHub Pages or custom domain
     if (isGitHubPages) {
       headersObj["Origin"] = window.location.origin;
       headersObj["X-Requested-With"] = "XMLHttpRequest";
       headersObj["X-GitHub-Deployment"] = "true";
+      headersObj["X-Deployment-Type"] = "github-pages";
     }
     
     // Add any headers from options
@@ -185,17 +215,20 @@ export const getQueryFn: <T>(options: {
     
     try {
       // Add origin header for CORS requests on GitHub Pages
-      const isGitHubPages = typeof window !== 'undefined' && 
-        (window.location.hostname.includes('github.io') || 
-         window.location.hostname.includes('yousef1508.github.io'));
+      const isGitHubPages = typeof window !== 'undefined' && (
+        window.location.hostname.includes('github.io') || 
+        window.location.hostname.includes('gjersjoengolfclub.com') ||
+        window.location.hostname.includes('yousef1508.github.io')
+      );
          
       const headersObj: Record<string, string> = {};
       
-      // Only add these headers when on GitHub Pages
+      // Only add these headers when on GitHub Pages or custom domain
       if (isGitHubPages) {
         headersObj["Origin"] = window.location.origin;
         headersObj["X-Requested-With"] = "XMLHttpRequest";
         headersObj["X-GitHub-Deployment"] = "true";
+        headersObj["X-Deployment-Type"] = "github-pages";
       }
       
       const res = await fetch(fullEndpoint, {

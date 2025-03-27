@@ -161,12 +161,104 @@ function Router() {
   );
 }
 
+// Component to check API connectivity - useful for GitHub Pages debugging
+const ApiConnectivityChecker = () => {
+  const [apiStatus, setApiStatus] = useState<'loading' | 'connected' | 'error'>('loading');
+  const [apiDetails, setApiDetails] = useState<any>(null);
+  
+  // Only run this check when deployed to GitHub Pages
+  useEffect(() => {
+    const isGitHubPages = typeof window !== 'undefined' && (
+      window.location.hostname.includes('github.io') || 
+      window.location.hostname.includes('gjersjoengolfclub.com')
+    );
+    
+    if (!isGitHubPages) {
+      // Skip connectivity check for local development
+      setApiStatus('connected');
+      return;
+    }
+    
+    const checkApiConnectivity = async () => {
+      try {
+        // Test ping endpoint
+        const apiBaseUrl = window.ENV?.API_BASE_URL || 'https://husky-mower.replit.app';
+        const pingUrl = `${apiBaseUrl}/api/ping`;
+        console.log('Checking API connectivity to:', pingUrl);
+        
+        const response = await fetch(pingUrl, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'X-GitHub-Deployment': 'true',
+            'Origin': window.location.origin
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API ping failed with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setApiStatus('connected');
+        setApiDetails(data);
+        console.log('API connectivity check successful:', data);
+      } catch (error) {
+        console.error('API connectivity check failed:', error);
+        setApiStatus('error');
+      }
+    };
+    
+    // Run connectivity check on mount
+    checkApiConnectivity();
+  }, []);
+  
+  // Only render status for GitHub Pages deployment
+  const isGitHubPages = typeof window !== 'undefined' && (
+    window.location.hostname.includes('github.io') || 
+    window.location.hostname.includes('gjersjoengolfclub.com')
+  );
+  
+  if (!isGitHubPages || apiStatus === 'connected') {
+    return null; // Don't show anything when connected or on local dev
+  }
+  
+  // Show loading or error state
+  return (
+    <div className="fixed bottom-4 right-4 z-50 rounded-lg shadow-lg bg-background p-4 border border-border">
+      <h3 className="font-bold text-sm">GitHub Pages API Connection</h3>
+      {apiStatus === 'loading' ? (
+        <p className="text-xs text-muted-foreground flex items-center">
+          <span className="mr-2 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
+          Checking API connectivity...
+        </p>
+      ) : (
+        <p className="text-xs text-destructive flex items-center">
+          <span className="mr-2 h-2 w-2 rounded-full bg-destructive"></span>
+          API connection failed - CORS issue
+        </p>
+      )}
+      <div className="mt-2 text-xs">
+        <details>
+          <summary className="cursor-pointer">Debug Info</summary>
+          <div className="mt-1 p-2 bg-muted rounded text-xs overflow-auto max-h-32">
+            <p>API URL: {window.ENV?.API_BASE_URL || 'https://husky-mower.replit.app'}</p>
+            <p>Current host: {window.location.host}</p>
+            <p>Origin: {window.location.origin}</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router />
         <Toaster />
+        <ApiConnectivityChecker />
       </AuthProvider>
     </QueryClientProvider>
   );

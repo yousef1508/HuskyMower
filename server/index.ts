@@ -15,29 +15,41 @@ app.use((req, res, next) => {
 app.use(cors({
   // Allow requests from specified origins
   origin: function(origin, callback) {
+    console.log(`CORS origin check for: ${origin || 'No Origin'}`);
+    
     // For local development or testing from Replit
-    if (!origin || origin.includes('replit.dev') || origin.includes('replit.app')) {
+    // Also allow requests with no origin (like curl or Postman)
+    if (!origin || 
+        origin.includes('replit.dev') || 
+        origin.includes('replit.app') || 
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')) {
+      console.log(`CORS: Allowing request from development origin: ${origin}`);
       callback(null, true);
       return;
     }
     
-    // For GitHub Pages domains
+    // For GitHub Pages domains - explicit list plus any github.io domain
     const allowedDomains = [
       'https://yousef1508.github.io',
       'http://yousef1508.github.io',
       'https://gjersjoengolfclub.com',
-      'http://gjersjoengolfclub.com'
+      'http://gjersjoengolfclub.com',
+      'https://github.io'
     ];
     
-    if (allowedDomains.indexOf(origin) !== -1 || origin.includes('github.io')) {
+    // Allow any github.io domain or specifically allowed domains
+    if (allowedDomains.some(domain => origin.includes(domain)) || 
+        origin.includes('github.io')) {
+      console.log(`CORS: Allowing request from GitHub Pages origin: ${origin}`);
       callback(null, true);
     } else {
-      console.warn(`CORS policy: Origin ${origin} not allowed`);
-      // Still allow the request but log the warning
+      // In production, we'll still allow all origins but log them for monitoring
+      console.warn(`⚠️ CORS policy: Unexpected origin ${origin}, allowing but monitoring`);
       callback(null, true);
     }
   },
-  // Important for authentication cookies
+  // Important for authentication cookies - must be true for credentials: 'include' to work
   credentials: true,
   // Allow necessary methods
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -49,16 +61,48 @@ app.use(cors({
     "X-HTTP-Method-Override", 
     "Accept", 
     "Origin",
-    "X-GitHub-Deployment" // Special header for GitHub Pages detection
+    "X-GitHub-Deployment", // Special header for GitHub Pages detection
+    "Cache-Control",
+    "X-Api-Key"
   ],
-  // Expose additional headers
-  exposedHeaders: ["X-Total-Count", "Content-Length", "Date"],
-  // Set max age for preflight requests (24 hours)
-  maxAge: 86400
+  // Expose headers needed by the frontend
+  exposedHeaders: [
+    "X-Total-Count", 
+    "Content-Length", 
+    "Date",
+    "Access-Control-Allow-Origin", 
+    "Access-Control-Allow-Credentials"
+  ],
+  // Set max age for preflight requests (6 hours)
+  maxAge: 21600,
+  // Return proper headers in OPTIONS preflight requests
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Special handler for OPTIONS requests (CORS preflight)
+// This ensures that CORS preflight requests are properly handled
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  console.log(`Handling OPTIONS preflight request from: ${origin || 'unknown'}`);
+  
+  // Set additional headers for GitHub Pages deployment
+  if (origin && (origin.includes('github.io') || origin.includes('gjersjoengolfclub.com'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 
+      'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-GitHub-Deployment, X-Api-Key');
+    res.header('Vary', 'Origin');
+    console.log('Added custom CORS headers for GitHub Pages preflight request');
+  }
+  
+  // End OPTIONS requests here
+  res.status(204).end();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

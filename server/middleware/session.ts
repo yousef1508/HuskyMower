@@ -23,23 +23,25 @@ export const sessionMiddleware = session({
   saveUninitialized: false, 
   name: "husky_mower_session", // Custom cookie name for easy identification
   cookie: {
-    // In production, secure should be true, but we need to conditionally set it
-    // When the app serves HTTPS content, this should be true
-    // But for local development over HTTP, it must be false
+    // In production, secure should be true for HTTPS
+    // For GitHub Pages to Replit HTTPS communication, this MUST be true
     secure: isProduction,
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     
     // Cross-Origin Resource Sharing (CORS) for GitHub Pages
-    // 'none' allows cross-origin cookies which is needed for GitHub Pages
-    // Must be 'none' for cross-origin (GitHub Pages to Replit) to work
+    // 'none' allows cross-origin cookies which is absolutely required for GitHub Pages
+    // This MUST be 'none' for cross-origin (GitHub Pages to Replit) to work with secure cookies
     sameSite: isProduction ? 'none' : 'lax',
     
     // Enables cookies to be set for specific domain
     // This is needed when the application is hosted on a different domain than the API
     // For GitHub Pages to Replit communication, we need to explicitly allow cross-domain cookies
     domain: undefined // This will default to the current domain
-  }
+  },
+  
+  // Additional session middleware configuration
+  proxy: true, // Trust the reverse proxy (important for HTTPS)
 });
 
 // Type definition for session with user
@@ -63,11 +65,32 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
     origin.includes('gjersjoengolfclub.com')
   );
   
-  // Log authentication attempt for debugging
-  console.log(`Auth check - Session: ${!!req.session}, UserId: ${req.session?.userId}, Origin: ${origin || 'none'}`);
+  // Check for special GitHub Pages debugging header
+  const isGitHubDeployment = req.headers['x-github-deployment'] === 'true';
+  
+  // For GitHub Pages requests, ensure CORS headers are properly set
+  if (isGitHubPagesRequest && origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-GitHub-Deployment, X-Deployment-Type, Origin');
+    
+    // Log more detailed information for GitHub Pages requests
+    console.log(`GitHub Pages auth check - Session: ${!!req.session}, UserId: ${req.session?.userId}, Origin: ${origin}`);
+    console.log(`Cookies: ${req.headers.cookie || 'none'}`);
+  } else {
+    // Log basic authentication attempt for non-GitHub Pages requests
+    console.log(`Auth check - Session: ${!!req.session}, UserId: ${req.session?.userId}, Origin: ${origin || 'none'}`);
+  }
   
   // First check the session for authentication
   if (req.session && req.session.userId) {
+    return next();
+  }
+  
+  // Special case: GitHub Pages ping request for connectivity testing
+  // Allow GitHub Pages app to ping the server without authentication
+  if (isGitHubDeployment && req.path === '/api/ping') {
     return next();
   }
 
@@ -76,16 +99,21 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
     // Include headers in error response for debugging
     const debugInfo = {
       sessionStatus: !!req.session,
+      sessionId: req.session?.id,
       cookies: req.headers.cookie,
       origin: req.headers.origin,
       referer: req.headers.referer,
-      host: req.headers.host
+      host: req.headers.host,
+      isGitHubDeployment,
+      path: req.path,
+      method: req.method
     };
     
     return res.status(401).json({ 
       message: "Unauthorized - Cross-Origin Session Issue", 
       detail: "Your session may not be properly maintained across domains.",
-      debug: debugInfo
+      debug: debugInfo,
+      timestamp: new Date().toISOString()
     });
   }
   
