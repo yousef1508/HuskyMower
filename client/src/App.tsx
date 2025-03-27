@@ -107,22 +107,23 @@ function ProtectedRoute({ component: Component, ...rest }: { component: React.Co
   const basePath = getBasePath();
   const [location, navigate] = useLocation();
   
+  // Always define useEffect, regardless of conditions
+  // This ensures hooks are called in the same order every render
+  useEffect(() => {
+    if (!loading && !user) {
+      console.log('User not authenticated, redirecting to login');
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+  
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center bg-background">
       <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
     </div>;
   }
   
+  // Early return null if not authenticated, the useEffect above will handle the redirect
   if (!user) {
-    // Use navigate instead of direct window.location for SPA routing
-    // This helps avoid redirect loops on GitHub Pages
-    console.log('User not authenticated, redirecting to login');
-    
-    // Use useEffect to navigate after render to avoid React state updates during render
-    useEffect(() => {
-      navigate('/login');
-    }, [navigate]);
-    
     return null;
   }
   

@@ -1,0 +1,48 @@
+GitHub Pages detected, setting BASE_PATH to: /HuskyMower HuskyMower:15:19
+GitHub Pages detected, setting BASE_PATH to: /HuskyMower HuskyMower:119:15
+Loading runtime environment configuration from env-config.js HuskyMower:149:15
+Runtime environment configuration loaded: 
+Object { FIREBASE_PROJECT_ID: "gjersjoengolfclub", API_BASE_URL: "https://husky-mower-backend.replit.app", FIREBASE_API_KEY_SET: true, FIREBASE_APP_ID_SET: true }
+env-config.js:18:9
+Runtime environment configuration loaded: 
+Object { FIREBASE_PROJECT_ID: "gjersjoengolfclub", API_BASE_URL: "https://husky-mower-backend.replit.app", FIREBASE_API_KEY_SET: true, FIREBASE_APP_ID_SET: true }
+env-config.js:18:9
+Firebase configuration: 
+Object { projectId: "gjersjoengolfclub", authDomain: "gjersjoengolfclub.firebaseapp.com", apiKeyProvided: true, appIdProvided: true }
+index-DvyeRo_O.js:1763:2276
+Normalizing path: /HuskyMower/ with basePath: /HuskyMower index-DvyeRo_O.js:1815:174751
+Updating location from /HuskyMower/ to / index-DvyeRo_O.js:1815:174844
+User not authenticated, redirecting to login 2 index-DvyeRo_O.js:1815:175426
+Error: Minified React error #310; visit https://reactjs.org/docs/error-decoder.html?invariant=310 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    Un https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    Wf https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    Pv https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    useEffect https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:9
+    Do https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:1815
+    kv https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    Um https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    mS https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    fS https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    _M https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    sf https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    Xm https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    cS https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    N https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:25
+    U https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:25
+index-DvyeRo_O.js:40:161
+Uncaught Error: Minified React error #310; visit https://reactjs.org/docs/error-decoder.html?invariant=310 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    Un https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    Wf https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    Pv https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    useEffect https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:9
+    Do https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:1815
+    kv https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:38
+    Um https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    mS https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    fS https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    _M https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    sf https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    Xm https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    cS https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:40
+    N https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:25
+    U https://yousef1508.github.io/HuskyMower/assets/index-DvyeRo_O.js:25
