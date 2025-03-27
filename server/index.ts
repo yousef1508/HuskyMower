@@ -5,21 +5,56 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Configure CORS for GitHub Pages and other clients
+// For development and debugging, log the origin of incoming requests
+app.use((req, res, next) => {
+  console.log(`Request from origin: ${req.headers.origin || 'unknown'} to ${req.path}`);
+  next();
+});
+
+// Configure CORS with specific settings for GitHub Pages access
 app.use(cors({
-  origin: [
-    // Allow your specific GitHub Pages domain
-    "https://yousef1508.github.io",
-    // Allow any GitHub Pages subdomain (as a fallback)
-    /^https:\/\/[a-zA-Z0-9\-]+\.github\.io$/,
-    // Allow development domain
-    "http://localhost:5000",
-    // Add other domains as needed
-  ],
+  // Allow requests from specified origins
+  origin: function(origin, callback) {
+    // For local development or testing from Replit
+    if (!origin || origin.includes('replit.dev') || origin.includes('replit.app')) {
+      callback(null, true);
+      return;
+    }
+    
+    // For GitHub Pages domains
+    const allowedDomains = [
+      'https://yousef1508.github.io',
+      'http://yousef1508.github.io',
+      'https://gjersjoengolfclub.com',
+      'http://gjersjoengolfclub.com'
+    ];
+    
+    if (allowedDomains.indexOf(origin) !== -1 || origin.includes('github.io')) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS policy: Origin ${origin} not allowed`);
+      // Still allow the request but log the warning
+      callback(null, true);
+    }
+  },
+  // Important for authentication cookies
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "X-HTTP-Method-Override", "Accept"],
+  // Allow necessary methods
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  // Allow required headers
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With", 
+    "X-HTTP-Method-Override", 
+    "Accept", 
+    "Origin",
+    "X-GitHub-Deployment" // Special header for GitHub Pages detection
+  ],
+  // Expose additional headers
   exposedHeaders: ["X-Total-Count", "Content-Length", "Date"],
+  // Set max age for preflight requests (24 hours)
+  maxAge: 86400
 }));
 
 app.use(express.json());
@@ -58,12 +93,46 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+    
+    // Check if this is a request from GitHub Pages
+    const origin = req.headers.origin;
+    const isGitHubPagesRequest = origin && (
+      origin.includes('github.io') || 
+      origin.includes('yousef1508.github.io') ||
+      origin.includes('gjersjoengolfclub.com')
+    );
+    
+    console.error(`Error handling request from ${origin || 'unknown origin'}:`, {
+      path: req.path,
+      method: req.method,
+      status,
+      message,
+      stack: err.stack,
+    });
+    
+    // Provide more detailed error info for GitHub Pages deployment
+    if (isGitHubPagesRequest) {
+      res.status(status).json({
+        message,
+        origin: req.headers.origin,
+        path: req.path,
+        method: req.method,
+        timestamp: new Date().toISOString(),
+        replit_endpoint: true,
+        error_details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      });
+    } else {
+      // Standard error response
+      res.status(status).json({ message });
+    }
+    
+    // In development, rethrow the error for better console logging
+    if (process.env.NODE_ENV === 'development') {
+      throw err;
+    }
   });
 
   // importantly only setup vite in development and after

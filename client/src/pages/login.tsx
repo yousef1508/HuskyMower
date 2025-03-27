@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,20 +11,55 @@ import { signInWithEmail } from "@/firebase/config";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail } from "lucide-react";
-
-// Create a schema for form validation
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+import { loginSchema } from "@shared/schema";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
   const [, navigate] = useLocation();
   const { signIn } = useAuth();
   const { toast } = useToast();
+  
+  // Check Firebase configuration on mount
+  useEffect(() => {
+    // Helper function to check environment variables
+    const checkEnv = (key: string): boolean => {
+      // Check in window.ENV (for GitHub Pages)
+      if (typeof window !== 'undefined' && window.ENV) {
+        if (window.ENV[key]) return true;
+        
+        // Also check without VITE_ prefix
+        const altKey = key.replace('VITE_', '');
+        if (window.ENV[altKey]) return true;
+      }
+      
+      // Check in import.meta.env
+      // @ts-ignore - TypeScript doesn't know about import.meta.env
+      if (import.meta && import.meta.env && import.meta.env[key]) {
+        return true;
+      }
+      
+      return false;
+    };
+    
+    // Check required Firebase config
+    const hasApiKey = checkEnv('VITE_FIREBASE_API_KEY');
+    const hasProjectId = checkEnv('VITE_FIREBASE_PROJECT_ID');
+    const hasAppId = checkEnv('VITE_FIREBASE_APP_ID');
+    
+    if (!hasApiKey || !hasProjectId || !hasAppId) {
+      setConfigError('Firebase configuration is incomplete. Authentication will not work properly.');
+      console.error('Missing Firebase configuration:', {
+        apiKey: hasApiKey,
+        projectId: hasProjectId,
+        appId: hasAppId
+      });
+    } else {
+      setConfigError(null);
+    }
+  }, []);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -85,6 +120,13 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {configError && (
+            <div className="mb-4 rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
+              <h4 className="text-sm font-semibold">Configuration Error</h4>
+              <p className="text-xs">{configError}</p>
+              <p className="mt-2 text-xs">Please make sure all required Firebase environment variables are properly set in GitHub Actions secrets.</p>
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField

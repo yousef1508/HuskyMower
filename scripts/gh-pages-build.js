@@ -19,7 +19,7 @@ const envVars = {
   AUTOMOWER_API_KEY: process.env.AUTOMOWER_API_KEY || '',
   AUTOMOWER_CLIENT_SECRET: process.env.AUTOMOWER_CLIENT_SECRET || '',
   // Add API base URL for production - this should point to your backend API
-  VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || 'https://husky-mower-backend.replit.app'
+  VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || 'https://husky-mower.replit.app'
 };
 
 /**

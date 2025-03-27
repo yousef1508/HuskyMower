@@ -26,8 +26,33 @@ const API_BASE_URL = getEnv('VITE_API_BASE_URL', '');
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const text = await res.text();
+      const errorMessage = text || res.statusText;
+      
+      // Log clearer error message for debugging
+      console.error(`API Error (${res.status})`, {
+        url: res.url,
+        status: res.status,
+        statusText: res.statusText,
+        message: errorMessage
+      });
+      
+      if (res.status === 0 || res.status === 504) {
+        throw new Error(`Network error: Could not connect to the server. The backend may be offline or there might be a CORS issue.`);
+      } else if (res.status === 401) {
+        throw new Error(`Authentication error: You are not logged in or your session has expired.`);
+      } else if (res.status === 403) {
+        throw new Error(`Authorization error: You don't have permission to perform this action.`);
+      } else {
+        throw new Error(`${res.status}: ${errorMessage}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`${res.status}: ${res.statusText}`);
+    }
   }
 }
 
@@ -40,14 +65,33 @@ function getFullEndpoint(endpoint: string): string {
   
   // If endpoint starts with /api/, prepend the base URL when in production
   if (endpoint.startsWith('/api/')) {
-    // Make sure we have a value for API_BASE_URL
-    const apiBaseUrl = API_BASE_URL || 'https://husky-mower.replit.app';
+    // First try to get from explicit environment variable
+    let apiBaseUrl = API_BASE_URL;
+    
+    // If not set, check if we're in GitHub Pages and use the hardcoded value
+    if (!apiBaseUrl) {
+      // Check if we're running on GitHub Pages by looking at the hostname
+      const isGitHubPages = typeof window !== 'undefined' && 
+        (window.location.hostname.includes('github.io') || 
+         window.location.hostname.includes('yousef1508.github.io'));
+      
+      if (isGitHubPages) {
+        apiBaseUrl = 'https://husky-mower.replit.app';
+        console.log('Detected GitHub Pages deployment, using Replit backend URL:', apiBaseUrl);
+      } else {
+        // For local development, we'll use relative URLs
+        console.log('Using relative URL for API request');
+        return endpoint;
+      }
+    }
     
     // Remove any trailing slash from base URL
     const cleanBaseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
     
-    console.log(`API request to: ${cleanBaseUrl}${endpoint}`);
-    return `${cleanBaseUrl}${endpoint}`;
+    // Log the full URL for debugging
+    const fullUrl = `${cleanBaseUrl}${endpoint}`;
+    console.log(`API request to: ${fullUrl}`);
+    return fullUrl;
   }
   
   return endpoint;
@@ -59,22 +103,75 @@ export async function apiRequest(
 ): Promise<any> {
   const fullEndpoint = getFullEndpoint(endpoint);
   
-  const res = await fetch(fullEndpoint, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-  });
+  try {
+    // Add origin header for CORS requests on GitHub Pages
+    const isGitHubPages = typeof window !== 'undefined' && 
+      (window.location.hostname.includes('github.io') || 
+       window.location.hostname.includes('yousef1508.github.io'));
+       
+    // Create headers object
+    const headersObj: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    
+    // Only add special headers when on GitHub Pages
+    if (isGitHubPages) {
+      headersObj["Origin"] = window.location.origin;
+      headersObj["X-Requested-With"] = "XMLHttpRequest";
+      headersObj["X-GitHub-Deployment"] = "true";
+    }
+    
+    // Add any headers from options
+    if (options?.headers) {
+      const optHeaders = options.headers as Record<string, string>;
+      Object.keys(optHeaders).forEach(key => {
+        headersObj[key] = optHeaders[key];
+      });
+    }
+    
+    // Create a new options object without the headers
+    const newOptions = { ...options };
+    if (newOptions.headers) {
+      delete newOptions.headers;
+    }
+    
+    const res = await fetch(fullEndpoint, {
+      credentials: "include",
+      headers: headersObj,
+      ...newOptions,
+    });
 
-  await throwIfResNotOk(res);
-  
-  // Only try to parse as JSON if there's content
-  if (res.status !== 204) { // No Content
-    return await res.json();
+    await throwIfResNotOk(res);
+    
+    // Only try to parse as JSON if there's content
+    if (res.status !== 204) { // No Content
+      return await res.json();
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`API request failed to ${fullEndpoint}:`, error);
+    
+    // Provide more helpful error for CORS issues
+    if (error instanceof Error && 
+        (error.message.includes('CORS') || 
+         error.message.includes('network') || 
+         error.message.includes('Failed to fetch'))) {
+      
+      console.error(`Possible CORS issue detected with endpoint: ${fullEndpoint}`);
+      
+      if (fullEndpoint.includes('husky-mower.replit.app')) {
+        console.error(`
+          CORS troubleshooting guide:
+          1. Ensure the Replit backend is running
+          2. Check that CORS is configured on the backend to allow requests from ${window.location.origin}
+          3. Verify that credentials: 'include' is properly handled on the server
+        `);
+      }
+    }
+    
+    throw error;
   }
-  
-  return null;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -86,16 +183,58 @@ export const getQueryFn: <T>(options: {
     const endpoint = queryKey[0] as string;
     const fullEndpoint = getFullEndpoint(endpoint);
     
-    const res = await fetch(fullEndpoint, {
-      credentials: "include",
-    });
+    try {
+      // Add origin header for CORS requests on GitHub Pages
+      const isGitHubPages = typeof window !== 'undefined' && 
+        (window.location.hostname.includes('github.io') || 
+         window.location.hostname.includes('yousef1508.github.io'));
+         
+      const headersObj: Record<string, string> = {};
+      
+      // Only add these headers when on GitHub Pages
+      if (isGitHubPages) {
+        headersObj["Origin"] = window.location.origin;
+        headersObj["X-Requested-With"] = "XMLHttpRequest";
+        headersObj["X-GitHub-Deployment"] = "true";
+      }
+      
+      const res = await fetch(fullEndpoint, {
+        credentials: "include",
+        headers: headersObj
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      
+      // Only try to parse as JSON if there's content
+      if (res.status !== 204) { // No Content
+        return await res.json();
+      }
+      
       return null;
+    } catch (error) {
+      console.error(`Query failed for ${fullEndpoint}:`, error);
+      
+      // Special handling for known errors
+      if (error instanceof Error) {
+        // If it's an auth error and we're configured to return null
+        if (error.message.includes('401') && unauthorizedBehavior === "returnNull") {
+          return null;
+        }
+        
+        // Helpful error info for CORS issues
+        if (error.message.includes('CORS') || 
+            error.message.includes('network') || 
+            error.message.includes('Failed to fetch')) {
+          console.error(`Possible CORS issue detected with endpoint: ${fullEndpoint}`);
+        }
+      }
+      
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

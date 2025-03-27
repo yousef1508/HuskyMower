@@ -135,6 +135,17 @@ function Router() {
   // This hook will normalize paths by removing the base path prefix if present
   useBasePathRouter();
   
+  // Log current authentication state on mount for debugging
+  const { user, loading } = useAuth();
+  useEffect(() => {
+    console.log('Router mounted - Auth state:', { 
+      user: user ? 'logged in' : 'not logged in', 
+      loading,
+      currentPath: window.location.pathname,
+      currentLocation: window.location.href
+    });
+  }, [user, loading]);
+  
   // Routes will now be matched correctly regardless of base path
   return (
     <Switch>
